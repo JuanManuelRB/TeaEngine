@@ -21,7 +21,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 
 /**
- * Main Window of the application.
+ * game.Main Window of the application.
  *
  * La ventana creada es una ventana de GLFW y por lo tanto las acciones que se lleven a cabo deben estar asociadas
  * a esta.

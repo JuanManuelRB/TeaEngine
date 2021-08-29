@@ -25,7 +25,7 @@ public interface Logic {
     void firstStep();
 
     /**
-     * Main body of the code.
+     * game.Main body of the code.
      * @param updates Number of times the code should be executed.
      */
     void mainSteps(int updates);
@@ -42,7 +42,7 @@ public interface Logic {
      *
      * {@link #inputEvents() Events} -
      * {@link #firstStep() First Step} -
-     * {@link #mainSteps(int updates) Main Steps} -
+     * {@link #mainSteps(int updates) game.Main Steps} -
      * {@link #lastStep() Last Step}
      *
      * @param updates Number of updates of the main body.

@@ -30,9 +30,9 @@ class GameLogic() : Logic {
         )
         val colours = floatArrayOf(
             0.5f, 0.0f, 0.0f,
-            0.0f, 0.5f, 0.0f,
+            0.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 0.5f,
-            0.0f, 0.5f, 0.5f
+            0.0f, 0.0f, 0.5f
         )
         val indices = intArrayOf(
             0, 1, 3, 3, 1, 2
@@ -85,7 +85,7 @@ class GameLogic() : Logic {
      */
     override fun render(window: Window) {
         Window.setClearColor(color, color, color, 0.0f)
-        renderer.render(window, mesh)
+        mesh?.let { renderer.render(window, it) }// TODO: change so mesh is never null
     }
 
     override fun end() {

@@ -1,6 +1,9 @@
 package engine.graphic;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Closeable;
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.lwjgl.opengl.GL15.*;
@@ -10,7 +13,6 @@ import static org.lwjgl.opengl.GL30.*;
 
 public final class Renderer implements Runnable, AutoCloseable {
     private ShaderProgram shaderProgram;
-    int vaoId, vboId;
 
     public Renderer() {}
 
@@ -36,7 +38,7 @@ public final class Renderer implements Runnable, AutoCloseable {
 //    int floatSizeBytes = 4;
 //    int vertexSizeBytes = (positionSize + colorSize) * floatSizeBytes;
 
-    public void init() throws Throwable {
+    public void init() throws IOException {
         // Create Shader Program
         shaderProgram = new ShaderProgram();
         shaderProgram.createVertexShader(Path.of("src/main/resources/Shaders/vertex/vertex.vs"));
@@ -45,52 +47,41 @@ public final class Renderer implements Runnable, AutoCloseable {
 
     }
 
-    public void render(Window window, Mesh mesh) {
+    /**
+     * Accepts a {@link Window window} instance and a {@link Mesh mesh} applies the mesh on the current context
+     * and updates the window.
+     *
+     * @param window A {@link Window Window} instance
+     * @param mesh A {@link Mesh Mesh} instance
+     */
+    public void render(@NotNull Window window, @NotNull Mesh mesh) {
+        render(mesh);
+
+        // Update the window
+        window.update();
+    }
+
+
+    /**
+     * Accepts a {@link Mesh mesh} and applies it in the current context. This method doesn't update the window.
+     * @param mesh A {@link Mesh Mesh} instance
+     */
+    public void render(@NotNull Mesh mesh) {
         clear();
 
         shaderProgram.bind();
 
-        // Bind to the VAO
-        glBindVertexArray(vaoId);
-        glEnableVertexAttribArray(0);
+        // Bind to the VAO TODO: ESTO NO HACE NADA! -> esta en mesh.render()
+//        glBindVertexArray(vaoId);
+//        glEnableVertexAttribArray(0);
 
         // Draw Mesh
-        glBindVertexArray(mesh.getVaoId());
-        glDrawElements(GL_TRIANGLES, mesh.getVertexCount(), GL_UNSIGNED_INT, 0);
-
-        // Restore state
-        glBindVertexArray(0);
-
+        mesh.render();
         shaderProgram.unbind();
 
-        // Update the window
-        Window.update();
+        // shaderProgram.getEBO(elementArray);TODO
+        // shaderProgram.createAttribPointer(positionSize, colorSize, floatSizeBytes);
     }
-
-
-
-//    public void render(Mesh mesh) {
-////        shaderProgram.getEBO(elementArray);TODO
-////        shaderProgram.createAttribPointer(positionSize, colorSize, floatSizeBytes);
-//
-//        clear();
-//
-//        if ( Ventana.isResized() ) {
-//            glViewport(0, 0, Ventana.getAncho(), Ventana.getAlto());
-//            Ventana.setResized(false);
-//        }
-//
-//        shaderProgram.bind();
-//
-//        // Draw the mesh
-//        glBindVertexArray(mesh.getVaoID());
-//        glDrawElements(GL_TRIANGLES, mesh.getVertexCount(), GL_UNSIGNED_INT, 0);
-//
-//        // Restore state
-//        glBindVertexArray(0);
-//
-//        shaderProgram.unbind();
-//    }
 
     public void clear() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

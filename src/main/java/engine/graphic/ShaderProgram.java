@@ -23,16 +23,18 @@ public class ShaderProgram implements AutoCloseable{
     private final int programID;//TODO: convert to record?
     private int vertexShaderID, fragmentShaderID, geometryShaderID; //TODO: geometry shader
     private final Map<String, Integer> uniforms;
-//    private Map<String, Integer> uniforms;
 
+
+    //TODO: this should be given in the constructor.
     int positionSize = 3;
     int colorSize = 4;
     int floatSizeBytes = 4;
     int vertexSizeBytes = (positionSize + colorSize) * floatSizeBytes;
 
     /**
+     * Creates a new OpenGL program,
      *
-     * @throws ShaderError Throws when the {@link GL20#glCreateProgram OpenGL2.0 program} can't be created.
+     * @throws ShaderError Throws when {@link GL20 OpenGL2.0} can't create a {@link GL20#glCreateProgram program}.
      */
     public ShaderProgram() throws ShaderError {
         programID = glCreateProgram();
@@ -41,11 +43,12 @@ public class ShaderProgram implements AutoCloseable{
         uniforms = new HashMap<>();
     }
 
-    //TODO: documentation, because I don't know what this does or what is it's purpose.
+
     /**
+     * Uniforms are global GLSL variables that shaders can use and that can be employed to communicate with them.
      *
      * @param uniformName Name of the uniform
-     * @throws ShaderError Throws when the {@link GL20#glGetUniformLocation OpenGL2.0 uniform} can't be obtained.
+     * @throws ShaderError Throws when a {@link GL20#glGetUniformLocation OpenGL2.0 uniform} can't be obtained.
      */
     public void createUniform(String uniformName) throws ShaderError {
         int uniformLocation = glGetUniformLocation(programID, uniformName);
@@ -56,8 +59,8 @@ public class ShaderProgram implements AutoCloseable{
 
     /**
      *
-     * @param uniformName
-     * @param value
+     * @param uniformName The name of the uniform to set the value
+     * @param value The value of the uniform, given by a {@link Matrix4f Matrix4f}
      */
     public void setUniform(String uniformName, Matrix4f value) {
         // Dump the matrix into a float buffer

@@ -1,6 +1,8 @@
 package engine.graphic;
 
+import engine.io.inputs.WindowListener;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,14 +18,15 @@ public final class Renderer implements Runnable, AutoCloseable {
 
     public Renderer() {}
 
-//    /**
-//     * Field of View in Radians
-//     */
-//    private static final float FOV = (float) Math.toRadians(60.0f);
-//    private static final float Z_NEAR = 0.01f;
-//    private static final float Z_FAR = 1000.f;
-//    Matrix4f projectionMatrix;
-//    float aspectRatio = (float) Window.getWidth() / Window.getHeight();
+    /**
+     * Field of View in Radians
+     */
+    private static final float FOV = (float) Math.toRadians(60.0f);
+    private static final float Z_NEAR = 0.01f;
+    private static final float Z_FAR = 1000.f;
+    Matrix4f projectionMatrix;
+    float aspectRatio = (float) Window.getWidth() / Window.getHeight();
+
 //
 //    private float[] vertexArray = new float[]{
 //            // posición            // color
@@ -45,6 +48,20 @@ public final class Renderer implements Runnable, AutoCloseable {
         shaderProgram.createFragmentShader(Path.of("src/main/resources/Shaders/fragments/fragment.fs"));
         shaderProgram.link();
 
+        // Create the uniforms
+        shaderProgram.createUniform("proyectionMatrix");
+        shaderProgram.createUniform("worldMatrix");
+
+        Window.setClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    }
+
+    /**
+     *
+     * @param shaderProgram The program the renderer attaches to
+     * @return A {@link Renderer Renderer} instance
+     */
+    public Renderer ofShader(ShaderProgram shaderProgram) {
+        return new Renderer();
     }
 
     /**
@@ -52,10 +69,10 @@ public final class Renderer implements Runnable, AutoCloseable {
      * and updates the window.
      *
      * @param window A {@link Window Window} instance
-     * @param mesh A {@link Mesh Mesh} instance
+     * @param renderable A {@link Mesh Mesh} instance
      */
-    public void render(@NotNull Window window, @NotNull Mesh mesh) {
-        render(mesh);
+    public void render(@NotNull Window window, @NotNull Renderable renderable) {
+        render(renderable);
 
         // Update the window
         window.update();
@@ -64,19 +81,25 @@ public final class Renderer implements Runnable, AutoCloseable {
 
     /**
      * Accepts a {@link Mesh mesh} and applies it in the current context. This method doesn't update the window.
-     * @param mesh A {@link Mesh Mesh} instance
+     * @param renderable A {@link Mesh Mesh} instance
      */
-    public void render(@NotNull Mesh mesh) {
+    public void render(@NotNull Renderable renderable) {
+        glViewport(0, 0, Window.getWidth(), Window.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
+
         clear();
 
         shaderProgram.bind();
+
+        // Update projection Matrix
+        Matrix4f projectionMatrix = Transformation.getProjectionMatrix(FOV, Window.getWidth(), Window.getHeight(), Z_NEAR, Z_FAR);
+        shaderProgram.setUniform("projectionMatrix", projectionMatrix);
 
         // Bind to the VAO TODO: ESTO NO HACE NADA! -> esta en mesh.render()
 //        glBindVertexArray(vaoId);
 //        glEnableVertexAttribArray(0);
 
         // Draw Mesh
-        mesh.render();
+        renderable.render();
         shaderProgram.unbind();
 
         // shaderProgram.getEBO(elementArray);TODO

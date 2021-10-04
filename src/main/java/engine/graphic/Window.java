@@ -28,7 +28,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * La ventana creada es una ventana de GLFW y por lo tanto las acciones que se lleven a cabo deben estar asociadas
  * a esta.
  */
-public final class Window implements AutoCloseable{ // TODO: make AbstractWindow?
+public final class Window implements AutoCloseable { // TODO: make AbstractWindow?
     private static Window windowInstance = null;
     private long glfwWindow;
 
@@ -47,8 +47,6 @@ public final class Window implements AutoCloseable{ // TODO: make AbstractWindow
 
     /**
      * Creates the window.
-     *
-     *
      */
     private static void create() {
         // Configurar GLFW
@@ -69,7 +67,7 @@ public final class Window implements AutoCloseable{ // TODO: make AbstractWindow
         get().glfwWindow = glfwCreateWindow(defaultWidth, defaultHeight, defaultWindowTitle, NULL, NULL);
 
         if (get().glfwWindow == NULL)
-            throw new RuntimeException("Error: No se pudo crear la ventana");
+            throw new RuntimeException("Error: Window could not be created");
 
         // Callbacks de ventana
         glfwSetWindowSizeCallback(get().glfwWindow, WindowListener::sizeCallback); //Tamaño de ventana

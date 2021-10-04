@@ -1,0 +1,1 @@
+package game.objects.characters.playable.companion;

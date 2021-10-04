@@ -1,5 +1,6 @@
 package engine.graphic;
 
+import org.jetbrains.annotations.Contract;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.NonnullDefault;
 
@@ -12,7 +13,7 @@ import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.*;
 
-public class Mesh { //Primitive object? record?
+public class Mesh implements Renderable { //Primitive object? record?
     private final int vaoId, posVboId, colourVboId, idxVboId, vertexCount;
 
 
@@ -83,6 +84,7 @@ public class Mesh { //Primitive object? record?
     /**
      *
      */
+    @Override
     public void render() {
         // Draw the mesh
         glBindVertexArray(getVaoId());

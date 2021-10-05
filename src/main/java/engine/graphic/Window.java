@@ -13,9 +13,11 @@ import engine.io.inputs.MouseListener;
 import engine.io.inputs.WindowListener;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 
@@ -26,7 +28,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * La ventana creada es una ventana de GLFW y por lo tanto las acciones que se lleven a cabo deben estar asociadas
  * a esta.
  */
-public final class Window implements AutoCloseable{
+public final class Window implements AutoCloseable { // TODO: make AbstractWindow?
     private static Window windowInstance = null;
     private long glfwWindow;
 
@@ -45,8 +47,6 @@ public final class Window implements AutoCloseable{
 
     /**
      * Creates the window.
-     *
-     *
      */
     private static void create() {
         // Configurar GLFW
@@ -67,7 +67,7 @@ public final class Window implements AutoCloseable{
         get().glfwWindow = glfwCreateWindow(defaultWidth, defaultHeight, defaultWindowTitle, NULL, NULL);
 
         if (get().glfwWindow == NULL)
-            throw new RuntimeException("Error: No se pudo crear la ventana");
+            throw new RuntimeException("Error: Window could not be created");
 
         // Callbacks de ventana
         glfwSetWindowSizeCallback(get().glfwWindow, WindowListener::sizeCallback); //Tamaño de ventana
@@ -215,8 +215,8 @@ public final class Window implements AutoCloseable{
 
     /**
      *
-     * @param width
-     * @return a {@link #Window instance}
+     * @param width New width of the window
+     * @return A {@link #Window Window} instance with the width updated
      */
     public static Window withWidth(int width) {
         glfwSetWindowSize(get().glfwWindow, width, WindowListener.getHeight());
@@ -224,24 +224,39 @@ public final class Window implements AutoCloseable{
 
     }
 
+    /**
+     *
+     * @param height New height of the window
+     * @return A {@link #Window Window} instance with the heigth updated
+     */
     public static Window withHeight(int height) {
         glfwSetWindowSize(get().glfwWindow, WindowListener.getWidth(), height);
         return get();
     }
 
+    /**
+     *
+     * @param positionX New position of the window in the X axis
+     * @return A {@link #Window Window} instance with the position updated
+     */
     public static Window withPositionX(int positionX) {
         glfwSetWindowPos(get().glfwWindow, positionX, WindowListener.getPosY());
         return get();
     }
 
+    /**
+     *
+     * @param positionY New position of the window in the Y axis
+     * @return A {@link #Window Window} instance with the position updated
+     */
     public static Window withPositionY(int positionY) {
-        glfwSetWindowPos(get().glfwWindow, WindowListener.getPosX(), positionY);//TODO: this should not depend on WindowListener
+        glfwSetWindowPos(get().glfwWindow, WindowListener.getPosX(), positionY);//TODO: this should not depend on WindowListener?
         return get();
     }
 
     /**
      *
-     * @return an int with the value of the width of the window.
+     * @return An {@code int} with the value of the width of the window.
      */
     public static int getWidth() {
         try ( MemoryStack stack = MemoryStack.stackPush() ) {
@@ -257,7 +272,7 @@ public final class Window implements AutoCloseable{
 
     /**
      *
-     * @return an int with the value of the height of the window.
+     * @return An {@code int} with the value of the height of the window.
      */
     public static int getHeight() {
         try ( MemoryStack stack = MemoryStack.stackPush() ) {

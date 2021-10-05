@@ -1,6 +1,11 @@
 package engine.graphic;
 
+import engine.io.inputs.WindowListener;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
+
 import java.io.Closeable;
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.lwjgl.opengl.GL15.*;
@@ -10,18 +15,18 @@ import static org.lwjgl.opengl.GL30.*;
 
 public final class Renderer implements Runnable, AutoCloseable {
     private ShaderProgram shaderProgram;
-    int vaoId, vboId;
 
     public Renderer() {}
 
-//    /**
-//     * Field of View in Radians
-//     */
-//    private static final float FOV = (float) Math.toRadians(60.0f);
-//    private static final float Z_NEAR = 0.01f;
-//    private static final float Z_FAR = 1000.f;
-//    Matrix4f projectionMatrix;
-//    float aspectRatio = (float) Window.getWidth() / Window.getHeight();
+    /**
+     * Field of View in Radians
+     */
+    private static final float FOV = (float) Math.toRadians(60.0f);
+    private static final float Z_NEAR = 0.01f;
+    private static final float Z_FAR = 1000.f;
+    Matrix4f projectionMatrix;
+    float aspectRatio = (float) Window.getWidth() / Window.getHeight();
+
 //
 //    private float[] vertexArray = new float[]{
 //            // posición            // color
@@ -36,61 +41,70 @@ public final class Renderer implements Runnable, AutoCloseable {
 //    int floatSizeBytes = 4;
 //    int vertexSizeBytes = (positionSize + colorSize) * floatSizeBytes;
 
-    public void init() throws Throwable {
+    public void init() throws IOException {
         // Create Shader Program
         shaderProgram = new ShaderProgram();
         shaderProgram.createVertexShader(Path.of("src/main/resources/Shaders/vertex/vertex.vs"));
         shaderProgram.createFragmentShader(Path.of("src/main/resources/Shaders/fragments/fragment.fs"));
         shaderProgram.link();
 
+        // Create the uniforms
+        shaderProgram.createUniform("proyectionMatrix");
+        shaderProgram.createUniform("worldMatrix");
+
+        Window.setClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    public void render(Window window, Mesh mesh) {
+    /**
+     *
+     * @param shaderProgram The program the renderer attaches to
+     * @return A {@link Renderer Renderer} instance
+     */
+    public Renderer ofShader(ShaderProgram shaderProgram) {
+        return new Renderer();
+    }
+
+    /**
+     * Accepts a {@link Window window} instance and a {@link Mesh mesh} applies the mesh on the current context
+     * and updates the window.
+     *
+     * @param window A {@link Window Window} instance
+     * @param renderable A {@link Mesh Mesh} instance
+     */
+    public void render(@NotNull Window window, @NotNull Renderable renderable) {
+        render(renderable);
+
+        // Update the window
+        window.update();
+    }
+
+
+    /**
+     * Accepts a {@link Mesh mesh} and applies it in the current context. This method doesn't update the window.
+     * @param renderable A {@link Mesh Mesh} instance
+     */
+    public void render(@NotNull Renderable renderable) {
+        glViewport(0, 0, Window.getWidth(), Window.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
+
         clear();
 
         shaderProgram.bind();
 
-        // Bind to the VAO
-        glBindVertexArray(vaoId);
-        glEnableVertexAttribArray(0);
+        // Update projection Matrix
+        Matrix4f projectionMatrix = Transformation.getProjectionMatrix(FOV, Window.getWidth(), Window.getHeight(), Z_NEAR, Z_FAR);
+        shaderProgram.setUniform("projectionMatrix", projectionMatrix);
+
+        // Bind to the VAO TODO: ESTO NO HACE NADA! -> esta en mesh.render()
+//        glBindVertexArray(vaoId);
+//        glEnableVertexAttribArray(0);
 
         // Draw Mesh
-        glBindVertexArray(mesh.getVaoId());
-        glDrawElements(GL_TRIANGLES, mesh.getVertexCount(), GL_UNSIGNED_INT, 0);
-
-        // Restore state
-        glBindVertexArray(0);
-
+        renderable.render();
         shaderProgram.unbind();
 
-        // Update the window
-        Window.update();
+        // shaderProgram.getEBO(elementArray);TODO
+        // shaderProgram.createAttribPointer(positionSize, colorSize, floatSizeBytes);
     }
-
-
-
-//    public void render(Mesh mesh) {
-////        shaderProgram.getEBO(elementArray);TODO
-////        shaderProgram.createAttribPointer(positionSize, colorSize, floatSizeBytes);
-//
-//        clear();
-//
-//        if ( Ventana.isResized() ) {
-//            glViewport(0, 0, Ventana.getAncho(), Ventana.getAlto());
-//            Ventana.setResized(false);
-//        }
-//
-//        shaderProgram.bind();
-//
-//        // Draw the mesh
-//        glBindVertexArray(mesh.getVaoID());
-//        glDrawElements(GL_TRIANGLES, mesh.getVertexCount(), GL_UNSIGNED_INT, 0);
-//
-//        // Restore state
-//        glBindVertexArray(0);
-//
-//        shaderProgram.unbind();
-//    }
 
     public void clear() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

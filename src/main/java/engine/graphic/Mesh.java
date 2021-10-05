@@ -1,6 +1,8 @@
 package engine.graphic;
 
+import org.jetbrains.annotations.Contract;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.NonnullDefault;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -11,9 +13,16 @@ import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.*;
 
-public class Mesh {
+public class Mesh implements Renderable { //Primitive object? record?
     private final int vaoId, posVboId, colourVboId, idxVboId, vertexCount;
 
+
+    /**
+     *
+     * @param positions
+     * @param colours
+     * @param indices
+     */
     public Mesh(float[] positions, float[] colours, int[] indices) {
         FloatBuffer positionBuffer = null;
         FloatBuffer colourBuffer = null;
@@ -21,13 +30,12 @@ public class Mesh {
 
         try {
             vertexCount = indices.length;
-
-            // Generar VertexArray
-            // Usar el VertexArrayObject
-
-            // Generar BufferArray
-            // Usar el BufferArrayObject
-
+            /*
+            1- Generar VertexArray
+            2- Usar el VertexArrayObject
+            3- Generar BufferArray
+            4- Usar el BufferArrayObject
+            */
 
             vaoId = glGenVertexArrays();
             glBindVertexArray(vaoId);
@@ -71,6 +79,19 @@ public class Mesh {
                 MemoryUtil.memFree(indicesBuffer);
 
         }
+    }
+
+    /**
+     *
+     */
+    @Override
+    public void render() {
+        // Draw the mesh
+        glBindVertexArray(getVaoId());
+        glDrawElements(GL_TRIANGLES, getVertexCount(), GL_UNSIGNED_INT, 0);
+
+        // Restore state
+        glBindVertexArray(0);
     }
 
     public int getVaoId(){ return vaoId; }

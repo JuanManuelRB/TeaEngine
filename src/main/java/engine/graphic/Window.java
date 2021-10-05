@@ -68,7 +68,7 @@ public final class Window implements AutoCloseable { // TODO: make AbstractWindo
         // TODO: create function that associates the window with a monitor or puts its value to NULL if the window should be fullscreen.
         // Crear la ventana
         get().glfwWindow = glfwCreateWindow(defaultWidth, defaultHeight, defaultWindowTitle, NULL, NULL);
-
+        assert NULL != get().glfwWindow;
         if (get().glfwWindow == NULL)
             throw new RuntimeException("Error: Window could not be created");
 

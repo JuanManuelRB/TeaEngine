@@ -20,7 +20,7 @@ class GameLogic() : Logic {
      * @throws Exception
      */
     override fun init() {
-        Window.get() // Init window
+
         renderer.init() // Init renderer
         val positions = floatArrayOf(
             -0.5f, 0.5f, -1.05f,

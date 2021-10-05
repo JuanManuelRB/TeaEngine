@@ -54,9 +54,13 @@ public class Engine implements Runnable{
 
         // Check GLFW initialization
         if (!GLFW.glfwInit())
-            throw new IllegalStateException("GLFW could not be initialized");
+            throw new IllegalStateException("Unable to initialize GLFW");
 
+        Window.get(); // Init window
         //TODO: create the Window instance and check for exceptions?
+
+        gameLogic.init();
+
 
 
 
@@ -68,7 +72,6 @@ public class Engine implements Runnable{
      * @throws Exception
      */
     private void loop() throws Throwable {
-        gameLogic.init();
         //TODO
         while(!Window.closeWindow() && !KeyListener.activeKey(GLFW.GLFW_KEY_ESCAPE)) {// TODO: Cambiar tecla escape (ESC, Esc) para cerrar ventana por otra o ninguna
             // Primero se actualiza la lógica y luego se actualizan los gráficos.

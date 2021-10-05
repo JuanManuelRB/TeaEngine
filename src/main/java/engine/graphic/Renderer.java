@@ -16,8 +16,6 @@ import static org.lwjgl.opengl.GL30.*;
 public final class Renderer implements Runnable, AutoCloseable {
     private ShaderProgram shaderProgram;
 
-    public Renderer() {}
-
     /**
      * Field of View in Radians
      */
@@ -25,7 +23,11 @@ public final class Renderer implements Runnable, AutoCloseable {
     private static final float Z_NEAR = 0.01f;
     private static final float Z_FAR = 1000.f;
     Matrix4f projectionMatrix;
-    float aspectRatio = (float) Window.getWidth() / Window.getHeight();
+//    float aspectRatio = (float) Window.getWidth() / Window.getHeight(); //TODO: Se ejecuta antes de la inicializacion de GLFW a traves de GameLogic
+
+
+    public Renderer() {}
+
 
 //
 //    private float[] vertexArray = new float[]{

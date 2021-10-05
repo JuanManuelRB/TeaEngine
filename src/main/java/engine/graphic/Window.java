@@ -49,6 +49,7 @@ public final class Window implements AutoCloseable { // TODO: make AbstractWindo
      * Creates the window.
      */
     private static void create() {
+
         // Configurar GLFW
         glfwDefaultWindowHints();                  // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  // the window will stay hidden after creation
@@ -61,6 +62,8 @@ public final class Window implements AutoCloseable { // TODO: make AbstractWindo
 
         final int defaultWidth= 300, defaultHeight = 200; // This should be provided by the startup method
         final String defaultWindowTitle = "Ventana"; // Also this
+
+
 
         // TODO: create function that associates the window with a monitor or puts its value to NULL if the window should be fullscreen.
         // Crear la ventana

@@ -3,10 +3,13 @@ module voxelengine {
 
     //
     requires transitive kotlin.stdlib;
+
     requires transitive org.lwjgl.natives;
     requires transitive org.lwjgl.glfw;
     requires transitive org.lwjgl.opengl;
+    requires transitive org.lwjgl.glfw.natives;
     requires transitive org.joml;
+
     requires annotations;
 
 
@@ -19,7 +22,7 @@ module voxelengine {
     // exports engine.net;
 
     opens engine.io.inputs;
-    opens engine.io.outputs;
+//    opens engine.io.outputs;
 
 
 

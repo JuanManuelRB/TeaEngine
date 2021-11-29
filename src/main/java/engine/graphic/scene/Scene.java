@@ -1,4 +1,4 @@
-package engine.graphic;
+package engine.graphic.scene;
 
 public abstract class Scene {
     public Scene() {

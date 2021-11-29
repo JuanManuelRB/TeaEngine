@@ -1,4 +1,4 @@
-package engine.graphic;
+package engine.graphic.render;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryStack;
 
@@ -18,7 +17,7 @@ import static org.lwjgl.opengl.GL20.*;
 
 
 /**
- *
+ * This class creates a valid shader program and stores it.
  */
 public class ShaderProgram implements AutoCloseable{
     private final int programID;//TODO: convert to record?
@@ -27,10 +26,10 @@ public class ShaderProgram implements AutoCloseable{
 
 
     //TODO: this should be given in the constructor.
-    int positionSize = 3;
-    int colorSize = 4;
-    int floatSizeBytes = 4;
-    int vertexSizeBytes = (positionSize + colorSize) * floatSizeBytes;
+    int positionSize = 3,
+            colorSize = 4,
+            floatSizeBytes = 4,
+            vertexSizeBytes = (positionSize + colorSize) * floatSizeBytes;
 
     /**
      * Creates a new OpenGL program,

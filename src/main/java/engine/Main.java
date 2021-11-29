@@ -2,12 +2,12 @@ package engine;
 
 //import game.Main;
 
-import game.GameLogic;
+import game.PokeGameLogic;
 
 public class Main {
     public static void main(String[] args) {
         try {
-            new Engine("GAME", new GameLogic()).startGame();
+            new Engine("GAME", new PokeGameLogic()).startGame();
 
         } catch (Exception excp) {
             excp.printStackTrace();

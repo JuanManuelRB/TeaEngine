@@ -1,6 +1,6 @@
 package engine;
 
-import engine.graphic.Window;
+import engine.graphic.window.Window;
 
 /**
  * This interface represents the execution logic of the application.

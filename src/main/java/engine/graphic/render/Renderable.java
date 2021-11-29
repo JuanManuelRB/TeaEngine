@@ -1,4 +1,4 @@
-package engine.graphic;
+package engine.graphic.render;
 
 @FunctionalInterface
 public interface Renderable {

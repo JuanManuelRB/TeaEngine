@@ -1,13 +1,13 @@
 package game
 
 import engine.Logic
-import engine.graphic.Mesh
-import engine.graphic.Renderer
-import engine.graphic.Window
+import engine.graphic.render.Mesh
+import engine.graphic.render.Renderer
+import engine.graphic.window.Window
 import engine.io.inputs.KeyListener
 import org.lwjgl.glfw.GLFW
 
-class GameLogic() : Logic {
+class PokeGameLogic(): Logic {
     private var direction = 0
     private var color = 0.0f
     private val renderer = Renderer()
@@ -20,6 +20,9 @@ class GameLogic() : Logic {
      * @throws Exception
      */
     override fun init() {
+
+        // Inicialización de la ventana y del renderer
+        Window.get()
 
         renderer.init() // Init renderer
         val positions = floatArrayOf(

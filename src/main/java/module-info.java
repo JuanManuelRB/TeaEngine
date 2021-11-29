@@ -22,6 +22,13 @@ module voxelengine {
     // exports engine.net;
 
     opens engine.io.inputs;
+    opens engine.graphic;
+    exports engine.graphic.window;
+    opens engine.graphic.window;
+    exports engine.graphic.render;
+    opens engine.graphic.render;
+    exports engine.graphic.scene;
+    opens engine.graphic.scene;
 //    opens engine.io.outputs;
 
 

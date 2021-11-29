@@ -1,5 +1,6 @@
-package engine.graphic;
+package engine.graphic.render;
 
+import engine.graphic.window.Window;
 import engine.io.inputs.WindowListener;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
@@ -9,10 +10,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 
-
+/**
+ * This class
+ */
 public final class Renderer implements Runnable, AutoCloseable {
     private ShaderProgram shaderProgram;
 

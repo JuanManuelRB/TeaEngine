@@ -1,8 +1,6 @@
-package engine.graphic;
+package engine.graphic.render;
 
-import org.jetbrains.annotations.Contract;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.system.NonnullDefault;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;

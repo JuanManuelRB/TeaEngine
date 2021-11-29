@@ -1,4 +1,4 @@
-package engine.graphic;
+package engine.graphic.render;
 
 public class ShaderError extends Error {
     public ShaderError(){

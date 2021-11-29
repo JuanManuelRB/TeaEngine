@@ -1,6 +1,6 @@
 package engine;
 
-import engine.graphic.Window;
+import engine.graphic.window.Window;
 import engine.io.inputs.KeyListener;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
@@ -9,7 +9,7 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 /**
  *
  */
-public class Engine implements Runnable{
+public final class Engine implements Runnable{
     private final Thread gameEngine;
     private final Logic gameLogic;
 
@@ -27,12 +27,15 @@ public class Engine implements Runnable{
             init();
             loop();
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();//TODO
+
         } catch (Throwable throwable) {
             throwable.printStackTrace();
+
         } finally {
             end();
+
         }
     }
 
@@ -49,21 +52,17 @@ public class Engine implements Runnable{
         // El callback puede cambiarse para que sea mas util que solo la salida estandar.
         GLFWErrorCallback.createPrint(System.err).set();
 
-        System.out.println("Version de LWJGL " + Version.getVersion());
+        System.out.println("Versión de LWJGL " + Version.getVersion());
         System.out.println("Inicializando LWJGL");
 
         // Check GLFW initialization
         if (!GLFW.glfwInit())
-            throw new IllegalStateException("Unable to initialize GLFW");
+            throw new IllegalStateException("No ha sido posible inicializar GLFW");
 
-        Window.get(); // Init window
-        //TODO: create the Window instance and check for exceptions?
+//        Window.get(); // Esta dentro de la logica, la ventana no deberia depender de el motor que se use
+//        //TODO: create the Window instance and check for exceptions?
 
         gameLogic.init();
-
-
-
-
     }
 
     /**

@@ -1,4 +1,4 @@
-package engine.graphic;
+package engine.graphic.window;
 
 import java.io.Closeable;
 import java.nio.IntBuffer;
@@ -32,7 +32,17 @@ public final class Window implements AutoCloseable { // TODO: make AbstractWindo
     private static Window windowInstance = null;
     private long glfwWindow;
 
-    private Window() {}
+    private Window() {
+        // Configurar GLFW
+        glfwDefaultWindowHints();                  // optional, the current window hints are already the default
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  // the window will stay hidden after creation
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
+
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    }
 
     // Singleton
     public static Window get() {
@@ -49,26 +59,14 @@ public final class Window implements AutoCloseable { // TODO: make AbstractWindo
      * Creates the window.
      */
     private static void create() {
-
-        // Configurar GLFW
-        glfwDefaultWindowHints();                  // optional, the current window hints are already the default
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
         final int defaultWidth= 300, defaultHeight = 200; // This should be provided by the startup method
         final String defaultWindowTitle = "Ventana"; // Also this
-
 
 
         // TODO: create function that associates the window with a monitor or puts its value to NULL if the window should be fullscreen.
         // Crear la ventana
         get().glfwWindow = glfwCreateWindow(defaultWidth, defaultHeight, defaultWindowTitle, NULL, NULL);
-        assert NULL != get().glfwWindow;
+
         if (get().glfwWindow == NULL)
             throw new RuntimeException("Error: Window could not be created");
 

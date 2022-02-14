@@ -1,39 +1,27 @@
-module voxelengine {
-    requires java.base;
+module engine {
+    requires org.lwjgl.glfw;
+    requires org.lwjgl.opengl;
+//    requires jdk.incubator.foreign;
+    requires annotations;
 
-    //
     requires transitive kotlin.stdlib;
 
     requires transitive org.lwjgl.natives;
-    requires transitive org.lwjgl.glfw;
-    requires transitive org.lwjgl.opengl;
     requires transitive org.lwjgl.glfw.natives;
     requires transitive org.joml;
 
-    requires annotations;
-
-
     exports engine;
-    exports engine.graphic;
-    exports engine.io;
+    exports graphic.window;
+    exports graphic.render;
+//    exports graphic.render;
+//    exports io;
 
     // exports engine.sound;
     // exports engine.ai;
     // exports engine.net;
 
-    opens engine.io.inputs;
-    opens engine.graphic;
-    exports engine.graphic.window;
-    opens engine.graphic.window;
-    exports engine.graphic.render;
-    opens engine.graphic.render;
-    exports engine.graphic.scene;
-    opens engine.graphic.scene;
-//    opens engine.io.outputs;
-
-
-
-
+    opens io.inputs;
+    opens graphic.window;
+//    exports graphic.render.scene;
+//    opens graphic.render.scene;
 }
-
-

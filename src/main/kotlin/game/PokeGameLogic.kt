@@ -1,29 +1,25 @@
 package game
 
-import engine.Logic
-import engine.graphic.render.Mesh
-import engine.graphic.render.Renderer
-import engine.graphic.window.Window
-import engine.io.inputs.KeyListener
+import engine.AbstractLogic
+import graphic.render.Mesh
+import graphic.render.Renderer
+import graphic.window.Window
+import io.inputs.KeyListener
 import org.lwjgl.glfw.GLFW
 
-class PokeGameLogic(): Logic {
+class PokeGameLogic(): AbstractLogic(Renderer()) {
     private var direction = 0
     private var color = 0.0f
-    private val renderer = Renderer()
     private lateinit var mesh: Mesh
 
 
     /**
-     * Punto de entrada donde se inicializan los valores del juego.
+     * Initialization of game logic.
      *
      * @throws Exception
      */
     override fun init() {
-
-        // Inicialización de la ventana y del renderer
-        Window.get()
-
+        window = Window.get() //TODO: La inicializacion de la ventana deberia estar como parametro al instanciar AbstractLogic
         renderer.init() // Init renderer
         val positions = floatArrayOf(
             -0.5f, 0.5f, -1.05f,
@@ -59,7 +55,7 @@ class PokeGameLogic(): Logic {
     }
 
     /**
-     * Primer código a ejecutarse en la lógica.
+     * This function is called once per update. Each update correlates to one render update.
      */
     override fun firstStep() {
         color += direction * 0.01f;
@@ -70,6 +66,9 @@ class PokeGameLogic(): Logic {
         }
     }
 
+    /**
+     * @param updates The max number of times the code inside the function should be called per update
+     */
     override fun mainSteps(updates: Int) {
         //TODO: main body of the loop, implement number of iterations
     }
@@ -86,9 +85,9 @@ class PokeGameLogic(): Logic {
      *
      * @throws Exception
      */
-    override fun render(window: Window) {
-        Window.setClearColor(color, color, color, 0.0f)
-        renderer.render(window, mesh)
+    override fun render() {
+        window.setClearColor(color, color, color, 0.0f)
+        renderer.render(mesh, window)
     }
 
     override fun end() {

@@ -1,11 +1,10 @@
-package engine;
+package old.engine;
 
 //import game.Main;
 
 import game.PokeGameLogic;
 
 public class Main {
-
     public static void main(String[] args) {
         try {
             new Engine("GAME", new PokeGameLogic()).startGame();

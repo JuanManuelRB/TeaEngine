@@ -1,14 +1,10 @@
 package graphic.window;
 
-import java.nio.IntBuffer;
-
+import io.inputs.*;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
-
-import io.inputs.KeyListener;
-import io.inputs.MouseListener;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
@@ -22,20 +18,19 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * Main Window of the application.
  *
  * Holds a reference to the GLFW window and implements methods to change its behavior
+ * TODO
  *
  */
-public final class Window extends AbstractWindow implements AutoCloseable { // TODO: make AbstractWindow?
-    private static Window windowInstance = null;
+public final class Window extends AbstractWindow {
     private final long glfwWindow;
-    private final static int DEFAULT_WIDTH = 400, DEFAULT_HEIGHT = 300;
-    private final static String DEFAULT_TITLE = "Ventana";
 
-    private Window() {
-        this(null);
-    }
-
-    private Window(AbstractWindowListener windowListener) {
-        super(windowListener);
+    private Window(String title, int width, int height,
+                   AbstractWindowListener windowListener,
+                   AbstractMouseListener mouseListener,
+                   AbstractKeyListener keyListener,
+                   AbstractGamepadListener gamepadListener
+    ) {
+        super(windowListener, mouseListener, keyListener, gamepadListener);
 
         // Configurar GLFW
         glfwDefaultWindowHints();                  // optional, the current window hints are already the default
@@ -51,64 +46,54 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
         //  if the window should be fullscreen.
 
         // Crear la ventana
-        this.glfwWindow = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_TITLE, NULL, NULL);
+        this.glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
 
         if (glfwWindow == NULL)
             throw new IllegalStateException("Error: Window could not be created");
     }
 
-    // Singleton
-    public static Window get() {
-        if (windowInstance == null) {
-            windowInstance = new Window();
-            windowInstance.create();
-        }
-
-        return windowInstance;
+    /**
+     *
+     * @return a builder for the window.
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public void setWindowListener(AbstractWindowListener listener) {
-        if (get().windowListener != null)
-            get().windowListener = listener;
-        else
-            throw new RuntimeException("The Window Listener is already set");
-    }
-
-    public static long glfwWindow() {
-        return get().glfwWindow;
+    public long glfwWindow() {
+        return glfwWindow;
     }
 
     /**
      * Creates the window.
      */
+    @Override
     protected void create() {
         // Callbacks de ventana
-        if (get().windowListener != null) {
-            glfwSetWindowSizeCallback(glfwWindow(), get().windowListener::sizeCallback);                  //Tamaño de ventana
-            glfwSetWindowPosCallback(glfwWindow(), get().windowListener::positionCallback);               //Posición de ventana
-            glfwSetFramebufferSizeCallback(glfwWindow(), get().windowListener::frameBufferSizeCallback);  //Tamaño en pixeles para OpenGL
-            glfwSetWindowFocusCallback(glfwWindow(), get().windowListener::focusCallback);
-            glfwSetWindowCloseCallback(glfwWindow(), get().windowListener::closeCallback);
-
-        }
+        glfwSetWindowSizeCallback(glfwWindow(), windowListener::sizeCallback);                // Tamaño de ventana
+        glfwSetWindowPosCallback(glfwWindow(), windowListener::positionCallback);             // Posición de ventana
+        glfwSetFramebufferSizeCallback(glfwWindow(), windowListener::frameBufferSizeCallback);// Tamaño en pixeles para OpenGL
+        glfwSetWindowFocusCallback(glfwWindow(), windowListener::focusCallback);              // Foco
+        glfwSetWindowCloseCallback(glfwWindow(), windowListener::closeCallback);              // Cierre
 
         // Callbacks de ratón
-        glfwSetCursorPosCallback(glfwWindow(), MouseListener::mousePosCallback);        // Posición de ratón
-        glfwSetMouseButtonCallback(glfwWindow(), MouseListener::mouseButtonCallback);   // Botones de ratón
-        glfwSetScrollCallback(glfwWindow(), MouseListener::mouseScrollCallback);        // Desplazamiento de la rueda
+        glfwSetCursorPosCallback(glfwWindow(), mouseListener::mousePosCallback);        // Posición de ratón
+        glfwSetMouseButtonCallback(glfwWindow(), mouseListener::mouseButtonCallback);   // Botones de ratón
+        glfwSetScrollCallback(glfwWindow(), mouseListener::mouseScrollCallback);        // Desplazamiento de la rueda
 
         // Callbacks de teclado
-        glfwSetKeyCallback(glfwWindow(), KeyListener::keyCallback); // Teclado
+        var pkcb = glfwSetKeyCallback(glfwWindow(), keyListener::keyCallback); // Teclado
 
         //TODO: No existe callback de gamepad, GLFW no lo considera dependiente de la ventana.
-
+//        glfwSetJoystickCallback()
+//        glfwSetJoystickUserPointer();
 
         // Get the thread stack and push a new frame
-        try ( MemoryStack stack = MemoryStack.stackPush() ) {
-            IntBuffer pWidth = stack.mallocInt(1); // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
+        try (MemoryStack stack = MemoryStack.stackPush() ) {
+            var pWidth = stack.mallocInt(1); // int*
+            var pHeight = stack.mallocInt(1); // int*
 
-            // Get the window size passed to glfwCreateWindow
+            // Get the window size.
             glfwGetWindowSize(glfwWindow(), pWidth, pHeight);
 
             // Obtener resolución del monitor primario
@@ -143,6 +128,12 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
 
     }
 
+    @Override
+    public String getTitle() {
+        return null;
+    }
+
+    @Override
     public void update() {
         glfwSwapBuffers(glfwWindow()); // swap the color buffers
 
@@ -153,7 +144,19 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
 
     }
 
-    public boolean closeWindow() {
+    @Override
+    public void close() throws Exception {
+        destroy();
+    }
+
+    public void destroy() {
+        GLFW.glfwWindowShouldClose(glfwWindow());
+        GLFW.glfwDestroyWindow(glfwWindow());
+        GLFW.glfwTerminate();
+    }
+
+    @Override
+    public boolean closing() {
         return GLFW.glfwWindowShouldClose(glfwWindow());
     }
 
@@ -163,95 +166,14 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
             glClearColor(red, green, blue, alpha);
     }
 
-    public void destroy() {
-        GLFW.glfwWindowShouldClose(get().glfwWindow);
-        GLFW.glfwDestroyWindow(get().glfwWindow);
-        GLFW.glfwTerminate();
-        windowInstance = null;
-    }
 
-    @Override
-    public void close() throws Exception {
-        destroy();
-    }
 
-    /**
-     *
-     * @param title the title of the window.
-     * @return a {@link #Window} instance
-     */
-    public static Window withTitle(String title) {//TODO: la clase ha dejado de guardar el tamaño?¿
-        glfwSetWindowTitle(glfwWindow(), title);
-        return get();
-    }
-
-    /**
-     *
-     * @param width New width of the window
-     * @return A {@link #Window Window} instance with the width updated
-     */
-    public static Window withWidth(int width) {
-        glfwSetWindowSize(glfwWindow(), width, get().getHeight());
-        return get();
-
-    }
-
-    /**
-     *
-     * @param height New height of the window
-     * @return A {@link #Window Window} instance with the heigth updated
-     */
-    public static Window withHeight(int height) {
-        glfwSetWindowSize(glfwWindow(), get().getWidth(), height);
-        return get();
-    }
-
-    /**
-     *
-     * @param width
-     * @param height
-     * @return
-     */
-    private static Window withDimensions(int width, int height) {
-        return withWidth(width).withHeight(height);
-
-    }
-
-    /**
-     *
-     * @param positionX New position of the window in the X axis.
-     * @return A {@link #Window Window} instance with the position updated.
-     */
-    public static Window withPositionX(int positionX) {
-        glfwSetWindowPos(glfwWindow(), positionX, get().getPosY());
-        return get();
-    }
-
-    /**
-     *
-     * @param positionY New position of the window in the Y axis.
-     * @return A {@link #Window Window} instance with the position updated.
-     */
-    public static Window withPositionY(int positionY) {
-        glfwSetWindowPos(glfwWindow(), get().getPosX(), positionY);
-        return get();
-    }
-
-    /**
-     *
-     * @param posX New position of the window in the X axis.
-     * @param posY New position of the window in the Y axis.
-     * @return A {@link #Window Window} instance with the position updated.
-     */
-    private static Window withPosition(int posX, int posY) {
-        return withPositionX(posX).withPositionY(posY);
-
-    }
 
     /**
      *
      * @return An {@code int} with the value of the X position of the window.
      */
+    @Override
     public int getPosX() {
         try(var stack = MemoryStack.stackPush()) {
             var pPosX = stack.mallocInt(1);
@@ -267,6 +189,7 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
      *
      * @return An {@code int} with the value of the Y position of the window.
      */
+    @Override
     public int getPosY() {
         try(var stack = MemoryStack.stackPush()) {
             var pPosX = stack.mallocInt(1);
@@ -282,10 +205,11 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
      *
      * @return An {@code int} with the value of the width of the window.
      */
+    @Override
     public int getWidth() {
         try ( var stack = MemoryStack.stackPush() ) {
-            IntBuffer pWidth = stack.mallocInt(1);  // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
+            var pWidth = stack.mallocInt(1);  // int*
+            var pHeight = stack.mallocInt(1); // int*
 
             // Get the window size
             glfwGetWindowSize(glfwWindow(), pWidth, pHeight);
@@ -298,17 +222,67 @@ public final class Window extends AbstractWindow implements AutoCloseable { // T
      *
      * @return An {@code int} with the value of the height of the window.
      */
+    @Override
     public int getHeight() {
         try ( MemoryStack stack = MemoryStack.stackPush() ) {
-            IntBuffer pWidth = stack.mallocInt(1);  // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
+            var pWidth = stack.mallocInt(1);  // int*
+            var pHeight = stack.mallocInt(1); // int*
 
             // Get the window size
-            glfwGetWindowSize(get().glfwWindow, pWidth, pHeight);
+            glfwGetWindowSize(glfwWindow(), pWidth, pHeight);
 
             return pHeight.get(0);
         }
     }
 
-}
 
+
+    public static class Builder implements WindowBuilder {
+        private String title = "Ventana";
+        private int width = 480, height = 360;
+        private AbstractWindowListener windowListener = WindowListener.get();
+        private AbstractMouseListener mouseListener = MouseListener.get();
+        private AbstractKeyListener keyListener = KeyListener.get();
+        private AbstractGamepadListener gamepadListener = GamepadListener.get();
+
+        @Override
+        public AbstractWindow build() {
+            return new Window(title, width, height, windowListener, mouseListener, keyListener, gamepadListener);
+        }
+
+        @Override
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        @Override
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        @Override
+        public void setHeight(int height) {
+            this.height = height;
+        }
+
+        @Override
+        public void setWindowListener(AbstractWindowListener listener) {
+            this.windowListener = listener;
+        }
+
+        @Override
+        public void setMouseListener(AbstractMouseListener listener) {
+            this.mouseListener = listener;
+        }
+
+        @Override
+        public void setKeyListener(AbstractKeyListener listener) {
+            this.keyListener = listener;
+        }
+
+        @Override
+        public void setGamepadListener(AbstractGamepadListener listener) {
+            this.gamepadListener = listener;
+        }
+    }
+}

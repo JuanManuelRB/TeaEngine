@@ -1,17 +1,12 @@
 package io.inputs;
 
-import java.util.Arrays;
-
 import static org.lwjgl.glfw.GLFW.*;
 
 
-public class KeyListener {
+public class KeyListener extends AbstractKeyListener {
 	private static KeyListener instance;
-	private final KeyAction[] keys = new KeyAction[GLFW_KEY_LAST];
-	
-	private KeyListener() {
-		Arrays.fill(keys, KeyAction.UNPRESSED);
-	}
+
+	private KeyListener() {}
 	
 	public static KeyListener get() {
 		if(KeyListener.instance == null)
@@ -20,8 +15,9 @@ public class KeyListener {
 		return instance;
 		
 	}
-	
-	public static void keyCallback(long window, int key, int scancode, int action, int mods) {
+
+	@Override
+	public void keyCallback(long window, int key, int scancode, int action, int mods) {
 		switch (action) {
 			case GLFW_PRESS -> get().keys[key] = KeyAction.PRESSED;
 			case GLFW_REPEAT -> get().keys[key] = KeyAction.HELD;
@@ -31,15 +27,19 @@ public class KeyListener {
 	}
 
 	/**
+	 * Returns true when the key is active.
 	 *
 	 * @param key An integer which value corresponds to a keyboard key.
 	 * @return True if the key is pressed, False if the key is not pressed.
 	 */
-	public static boolean activeKey(int key) {
+	@Override
+	public boolean activeKey(int key) {
 		return get().keys[key] != null && (get().keys[key].isActive());
 	}
 
-	public static KeyAction getTecla(int key) {
+
+	@Override
+	public KeyAction getKey(int key) {
 		return get().keys[key];
 	}
 }

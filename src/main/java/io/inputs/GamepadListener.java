@@ -5,7 +5,7 @@ import java.util.Arrays;
 import static org.lwjgl.glfw.GLFW.*;
 
 
-public class GamepadListener {//TODO
+public class GamepadListener extends AbstractGamepadListener {//TODO
 	private static GamepadListener gamepadInstance;
 	private final int[] gamepads = new int[GLFW_JOYSTICK_LAST];
 	

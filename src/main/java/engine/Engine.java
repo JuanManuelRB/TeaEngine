@@ -1,6 +1,6 @@
 package engine;
 
-import graphic.window.Window;
+import graphic.window.AbstractWindow;
 import io.inputs.KeyListener;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
@@ -75,7 +75,7 @@ public final class Engine implements Runnable, AutoCloseable{
      */
     private void loop() throws Throwable {
         //TODO: no se debe utilizar Window.get(), se debe utilizar una instancia de AbstractWindow.
-        while(!Window.get().closeWindow() && !KeyListener.activeKey(GLFW.GLFW_KEY_ESCAPE)) {// TODO: Cambiar tecla escape (ESC, Esc) para cerrar ventana por otra o ninguna
+        while(!gameLogic.closing() && !KeyListener.get().activeKey(GLFW.GLFW_KEY_ESCAPE)) {// TODO: Cambiar tecla escape (ESC, Esc) para cerrar ventana por otra o ninguna
             // Primero se actualiza la lógica y luego se actualizan los gráficos.
             gameLogic.updateLogic(10); // TODO: El numero de actualizaciones sera variable segun el tiempo disponible.
             gameLogic.render(); // TODO: EL metodo renderizado debera efectuarse tantas veces como se indique.

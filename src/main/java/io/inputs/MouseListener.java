@@ -5,7 +5,7 @@ import java.util.Arrays;
 import static org.lwjgl.glfw.GLFW.*;
 
 
-public class MouseListener {
+public class MouseListener extends AbstractMouseListener {
 	private static MouseListener instance = null;
 	private final KeyAction[] buttons = new KeyAction[GLFW_MOUSE_BUTTON_LAST];
 	private double mouseX, mouseY,  	//Posición del ratón.
@@ -18,21 +18,23 @@ public class MouseListener {
 		this.scrollY = 0f;
 		Arrays.fill(buttons, KeyAction.UNPRESSED);
 	}
-	
+
 	public static MouseListener get() {
 		if (instance == null)
 			instance = new MouseListener();
 		
 		return instance;
 	}
-	
-	public static void mousePosCallback(long window, double xpos, double ypos) {
+
+	@Override
+	public void mousePosCallback(long window, double xpos, double ypos) {
 		get().mouseX = xpos;
 		get().mouseY = ypos;
 		
 	}
 
-	public static void mouseButtonCallback(long window, int button, int action, int mods) {
+	@Override
+	public void mouseButtonCallback(long window, int button, int action, int mods) {
 		switch (action) {
 			case GLFW_PRESS -> get().buttons[button] = KeyAction.PRESSED;
 			case GLFW_REPEAT -> get().buttons[button] = KeyAction.HELD;
@@ -41,23 +43,28 @@ public class MouseListener {
 
 		}
 	}
-	
-	public static void mouseScrollCallback(long window, double xOffset, double yOffset) {
+
+	@Override
+	public void mouseScrollCallback(long window, double xOffset, double yOffset) {
 		get().scrollX = xOffset;
 		get().scrollY = yOffset;
 	}
-	
-	public static boolean activeButton(int button) {
+
+	@Override
+	public boolean activeButton(int button) {
 		return get().buttons[button] != null && (get().buttons[button].isActive());
 	}
+
 
 	public KeyAction getButton(int glfwButton) {
 		return get().buttons[glfwButton];
 	}
 
+
 	public static float getMouseX() {
 		return (float)get().mouseX;
 	}
+
 
 	public static float getMouseY() {
 		return (float)get().mouseY;

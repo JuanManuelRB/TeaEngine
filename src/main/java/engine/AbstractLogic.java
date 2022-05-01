@@ -8,12 +8,13 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This interface represents the execution logic of the application.
  */
-public abstract class AbstractLogic {
-    protected AbstractWindow window;
+public abstract class AbstractLogic implements AutoCloseable {
+    protected final AbstractWindow window;
     protected final Renderer renderer;
 
-    public AbstractLogic(@NotNull Renderer renderer) {
+    public AbstractLogic(@NotNull Renderer renderer, @NotNull AbstractWindow window) {
         this.renderer = renderer;
+        this.window = window;
     }
 
     /**
@@ -51,7 +52,7 @@ public abstract class AbstractLogic {
      *
      * {@link #inputEvents() Events} -
      * {@link #firstStep() First Step} -
-     * {@link #mainSteps(int updates) game.Main Steps} -
+     * {@link #mainSteps(int updates) Main Steps} -
      * {@link #lastStep() Last Step}
      *
      * @param updates Number of updates of the main body.
@@ -75,4 +76,8 @@ public abstract class AbstractLogic {
      * Finalize
      */
     public abstract void end();
+
+    public boolean closing() {
+        return window.closing();
+    }
 }

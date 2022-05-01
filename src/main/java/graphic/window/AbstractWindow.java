@@ -1,27 +1,82 @@
 package graphic.window;
 
-import org.lwjgl.system.MemoryStack;
+import io.inputs.AbstractGamepadListener;
+import io.inputs.AbstractKeyListener;
+import io.inputs.AbstractMouseListener;
 
-import java.nio.IntBuffer;
-
-import static org.lwjgl.glfw.GLFW.glfwGetWindowPos;
-import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
-
-public abstract class AbstractWindow {
-    AbstractWindowListener windowListener;
+/**
+ * This class represents a basic window without logic, which the engine needs to run.
+ */
+public abstract class AbstractWindow implements AutoCloseable {
+    final AbstractWindowListener windowListener;
+    final AbstractMouseListener mouseListener;
+    final AbstractKeyListener keyListener;
+    final AbstractGamepadListener gamepadListener;
 
     /**
+     * Default constructor for the Window implementation.
+     * Sets the listeners to the window.
      *
      * @param windowListener An instance of an implementation of AbstractWindowListener.
      */
-    AbstractWindow(AbstractWindowListener windowListener) {
+    public AbstractWindow(
+            AbstractWindowListener windowListener,
+            AbstractMouseListener mouseListener,
+            AbstractKeyListener keyListener,
+            AbstractGamepadListener gamepadListener
+    ) {
         this.windowListener = windowListener;
+        this.mouseListener = mouseListener;
+        this.keyListener = keyListener;
+        this.gamepadListener = gamepadListener;
+
     }
 
-    public abstract void update();
-
+    /**
+     * Method to create the window and set the context.
+     */
     protected abstract void create();
 
+    /**
+     * Method to update the window.
+     */
+    public abstract void update();
+
+
+    /**
+     *
+     * @return window listener in use.
+     */
+    public AbstractWindowListener windowListener() {
+        return windowListener;
+    }
+
+    /**
+     *
+     * @return mouse listener in use.
+     */
+    public AbstractMouseListener mouseListener() {
+        return mouseListener;
+    }
+
+    /**
+     *
+     * @return key listener in use.
+     */
+    public AbstractKeyListener keyListener() {
+        return keyListener;
+    }
+
+    /**
+     *
+     * @return gamepad listener in use.
+     */
+    public AbstractGamepadListener gamepadListener() {
+        return gamepadListener;
+    }
+
+
+    public abstract String getTitle();
 
     /**
      *
@@ -48,4 +103,6 @@ public abstract class AbstractWindow {
     public abstract int getHeight();
 
     public abstract void setClearColor(float red, float green, float blue, float alpha);
+
+    public abstract boolean closing();
 }

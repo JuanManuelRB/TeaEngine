@@ -3,15 +3,18 @@ package game
 import engine.AbstractLogic
 import graphic.render.Mesh
 import graphic.render.Renderer
-import graphic.window.Window
+import graphic.window.AbstractWindow
 import io.inputs.KeyListener
 import org.lwjgl.glfw.GLFW
 
-class PokeGameLogic(): AbstractLogic(Renderer()) {
+class PokeGameLogic(window: AbstractWindow): AbstractLogic(Renderer(), window) {
     private var direction = 0
     private var color = 0.0f
     private lateinit var mesh: Mesh
 
+    override fun close() {
+        window.close()
+    }
 
     /**
      * Initialization of game logic.
@@ -19,7 +22,6 @@ class PokeGameLogic(): AbstractLogic(Renderer()) {
      * @throws Exception
      */
     override fun init() {
-        window = Window.get() //TODO: La inicializacion de la ventana deberia estar como parametro al instanciar AbstractLogic
         renderer.init() // Init renderer
         val positions = floatArrayOf(
             -0.5f, 0.5f, -1.05f,
@@ -47,8 +49,8 @@ class PokeGameLogic(): AbstractLogic(Renderer()) {
      */
     override fun inputEvents() {
         direction = when {
-            KeyListener.activeKey(GLFW.GLFW_KEY_UP) ->  1
-            KeyListener.activeKey(GLFW.GLFW_KEY_DOWN) -> -1
+            KeyListener.get().activeKey(GLFW.GLFW_KEY_UP) ->  1
+            KeyListener.get().activeKey(GLFW.GLFW_KEY_DOWN) -> -1
             else -> 0
 
         }

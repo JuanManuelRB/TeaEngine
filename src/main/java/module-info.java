@@ -11,4 +11,6 @@ module VoxelEngine {
 
     requires transitive org.joml;
 
+    opens
+
 }

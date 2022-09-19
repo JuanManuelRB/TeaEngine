@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>JEngine</groupId>
+    <groupId>juanmanuel.vengine</groupId>
     <artifactId>VEngine</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -15,7 +15,8 @@
         <maven.compiler.target>18</maven.compiler.target>
 
         <java.version>18.0.1</java.version>
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.7.0</kotlin.version>
+
 
         <lwjgl.version>3.3.1-SNAPSHOT</lwjgl.version>
         <joml.version>1.10.2</joml.version>
@@ -105,6 +106,13 @@
             <releases><enabled>false</enabled></releases>
             <snapshots><enabled>true</enabled></snapshots>
         </repository>
+        <repository>
+            <id>central-snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+
     </repositories>
 
     <dependencyManagement>
@@ -130,6 +138,12 @@
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.dominion.ecs</groupId>
+            <artifactId>dominion-ecs-engine</artifactId>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

@@ -1,13 +1,7 @@
 package engine;
 
-public abstract class Timer implements Runnable {
+public abstract class Timer {
     public static long initialTime, endingTime;
-
-
-    @Override
-    public void run() {
-
-    }
 
 
 

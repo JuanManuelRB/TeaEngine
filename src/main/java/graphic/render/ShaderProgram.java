@@ -12,7 +12,6 @@ import org.lwjgl.system.MemoryStack;
 
 import io.ResourceLoader;
 
-
 import static org.lwjgl.opengl.GL20.*;
 
 
@@ -20,12 +19,12 @@ import static org.lwjgl.opengl.GL20.*;
  * This class creates a valid shader program and stores it.
  */
 public class ShaderProgram implements AutoCloseable {
-    private final int programID;//TODO: convert to record?
-    private int vertexShaderID, fragmentShaderID, geometryShaderID; //TODO: geometry shader
+    private final int programID; // TODO: convert to record?
+    private int vertexShaderID, fragmentShaderID, geometryShaderID; // TODO: geometry shader
     private final Map<String, Integer> uniforms;
 
 
-    //TODO: this should be given in the constructor.
+    // TODO: this should be given in the constructor.
     int positionSize = 3,
             colorSize = 4,
             floatSizeBytes = 4,
@@ -40,12 +39,13 @@ public class ShaderProgram implements AutoCloseable {
         programID = glCreateProgram();
         if (programID == 0)
             throw new ShaderError("Shader program creation error: Could not create the shader program");
+
         uniforms = new HashMap<>();
     }
 
 
     /**
-     * Uniforms are global GLSL variables that shaders can use and that can be employed to communicate with them.
+     * Uniforms are global GLSL variables that shaders can use and can be used to communicate with them.
      *
      * @param uniformName Name of the uniform
      * @throws ShaderError Throws when a {@link GL20#glGetUniformLocation OpenGL2.0 uniform} can't be obtained.
@@ -54,6 +54,7 @@ public class ShaderProgram implements AutoCloseable {
         int uniformLocation = glGetUniformLocation(programID, uniformName);
         if (uniformLocation == 0)
             throw new ShaderError("Uniform creation error: Could not find the uniform" + uniformName);
+
         uniforms.put(uniformName, uniformLocation);
     }
 
@@ -150,7 +151,7 @@ public class ShaderProgram implements AutoCloseable {
             throw new ShaderError("Error linking shader code: "
                     + glGetProgramInfoLog(programID, 1024));
 
-        //Detach vertex and fragment shaders from the program
+        // Detach vertex and fragment shaders from the program
         if (vertexShaderID != 0)
             glDetachShader(programID, vertexShaderID);
 

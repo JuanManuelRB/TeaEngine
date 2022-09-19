@@ -1,14 +1,14 @@
 package graphic.render;
 
+import graphic.scene.View;
 import graphic.window.AbstractWindow;
-import graphic.window.Window;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
 import static org.lwjgl.opengl.GL15.*;
 
 /**
@@ -16,7 +16,6 @@ import static org.lwjgl.opengl.GL15.*;
  */
 public final class Renderer implements Runnable, AutoCloseable {
     private ShaderProgram shaderProgram;
-//    private final AbstractWindow window; //TODO
 
     /**
      * Field of View in Radians
@@ -61,29 +60,29 @@ public final class Renderer implements Runnable, AutoCloseable {
 
     /**
      *
-     * @param shaderProgram The program the renderer attaches to
-     * @return A {@link Renderer Renderer} instance
+     * @param shaderProgram The program the renderer attaches to.
+     * @return A {@link Renderer Renderer} instance with the Shader attached.
      */
-    public Renderer ofShader(ShaderProgram shaderProgram) {
+    public Renderer ofShader(Shader shaderProgram) {
         return new Renderer();
     }
 
     /**
-     * Accepts a {@link AbstractWindow window} instance and a {@link Mesh mesh} applies the mesh on the current context
-     * and updates the window.
-     *
-     * @param renderable A {@link Mesh Mesh} instance
-     *
+     * Accepts a {@link Renderable renderable} and a {@link Viewer viewer}
+     * @param renderable a {@link Renderable Renderable} instance.
+     * @param x an int, the X position to render.
+     * @param y an int, the Y position to render.
+     * @param viewer a {@link Viewer Viewer} instance where to render.
      */
-    public void render(@NotNull Renderable renderable, @NotNull AbstractWindow window) {
-        glViewport(0, 0, window.getWidth(), window.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
+    public void render(@NotNull Renderable renderable, int x, int y, @NotNull Viewer viewer) {
+        glViewport(0, 0, viewer.getWidth(), viewer.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
 
         clear();
 
         shaderProgram.bind();
 
         // Update projection Matrix
-        Matrix4f projectionMatrix = Transformation.getProjectionMatrix(FOV, window.getWidth(), window.getHeight(), Z_NEAR, Z_FAR);
+        Matrix4f projectionMatrix = Transformation.getProjectionMatrix(FOV, viewer.getWidth(), viewer.getHeight(), Z_NEAR, Z_FAR);
         shaderProgram.setUniform("projectionMatrix", projectionMatrix);
 
         // Bind to the VAO TODO: ESTO NO HACE NADA! -> esta en mesh.render()
@@ -97,7 +96,12 @@ public final class Renderer implements Runnable, AutoCloseable {
         // shaderProgram.getEBO(elementArray);TODO
         // shaderProgram.createAttribPointer(positionSize, colorSize, floatSizeBytes);
 
-        window.update();
+    }
+
+    public void render(@NotNull View view, @NotNull Viewer viewer) {
+        glfwMakeContextCurrent(viewer.getContext());
+        glViewport(0, 0, viewer.getWidth(), viewer.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
+
     }
 
     public void clear() {
@@ -109,67 +113,13 @@ public final class Renderer implements Runnable, AutoCloseable {
             shaderProgram.cleanup();
     }
 
-    /**
-     * Closes this resource, relinquishing any underlying resources.
-     * This method is invoked automatically on objects managed by the
-     * {@code try}-with-resources statement.
-     *
-     * <p>While this interface method is declared to throw {@code
-     * Exception}, implementers are <em>strongly</em> encouraged to
-     * declare concrete implementations of the {@code close} method to
-     * throw more specific exceptions, or to throw no exception at all
-     * if the close operation cannot fail.
-     *
-     * <p> Cases where the close operation may fail require careful
-     * attention by implementers. It is strongly advised to relinquish
-     * the underlying resources and to internally <em>mark</em> the
-     * resource as closed, prior to throwing the exception. The {@code
-     * close} method is unlikely to be invoked more than once and so
-     * this ensures that the resources are released in a timely manner.
-     * Furthermore it reduces problems that could arise when the resource
-     * wraps, or is wrapped, by another resource.
-     *
-     * <p><em>Implementers of this interface are also strongly advised
-     * to not have the {@code close} method throw {@link
-     * InterruptedException}.</em>
-     * <p>
-     * This exception interacts with a thread's interrupted status,
-     * and runtime misbehavior is likely to occur if an {@code
-     * InterruptedException} is {@linkplain Throwable#addSuppressed
-     * suppressed}.
-     * <p>
-     * More generally, if it would cause problems for an
-     * exception to be suppressed, the {@code AutoCloseable.close}
-     * method should not throw it.
-     *
-     * <p>Note that unlike the {@link Closeable#close close}
-     * method of {@link Closeable}, this {@code close} method
-     * is <em>not</em> required to be idempotent.  In other words,
-     * calling this {@code close} method more than once may have some
-     * visible side effect, unlike {@code Closeable.close} which is
-     * required to have no effect if called more than once.
-     * <p>
-     * However, implementers of this interface are strongly encouraged
-     * to make their {@code close} methods idempotent.
-     *
-     * @throws Exception if this resource cannot be closed
-     */
+
     @Override
     public void close() throws Exception {
 
     }
 
-    /**
-     * When an object implementing interface {@code Runnable} is used
-     * to create a thread, starting the thread causes the object's
-     * {@code run} method to be called in that separately executing
-     * thread.
-     * <p>
-     * The general contract of the method {@code run} is that it may
-     * take any action whatsoever.
-     *
-     * @see Thread#run()
-     */
+
     @Override
     public void run() {
         //TODO

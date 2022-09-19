@@ -32,7 +32,7 @@ public class HelloWorldTest {
     }
 
     private void init() {
-        // Setup an error callback. The default implementation
+        // Set up an error callback. The default implementation
         // will print the error message in System.err.
         GLFWErrorCallback.createPrint(System.err).set();
 

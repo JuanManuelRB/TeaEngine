@@ -2,15 +2,16 @@ package engine;
 
 import graphic.render.Renderer;
 import graphic.window.AbstractWindow;
-import graphic.window.Window;
 import org.jetbrains.annotations.NotNull;
+
 
 /**
  * This interface represents the execution logic of the application.
  */
-public abstract class AbstractLogic implements AutoCloseable {
+public abstract class AbstractLogic implements AutoCloseable, Logic {
     protected final AbstractWindow window;
     protected final Renderer renderer;
+    private int ups = 30;
 
     public AbstractLogic(@NotNull Renderer renderer, @NotNull AbstractWindow window) {
         this.renderer = renderer;
@@ -40,6 +41,9 @@ public abstract class AbstractLogic implements AutoCloseable {
      */
     public abstract void mainSteps(int updates);
 
+    public abstract void mainSteps(int update, int updates);
+
+
     /**
      * This step is executed once after the main steps.
      */
@@ -54,13 +58,14 @@ public abstract class AbstractLogic implements AutoCloseable {
      * {@link #firstStep() First Step} -
      * {@link #mainSteps(int updates) Main Steps} -
      * {@link #lastStep() Last Step}
-     *
-     * @param updates Number of updates of the main body.
      */
-    public final void updateLogic(int updates) {
+    @Override
+    synchronized public final void update() {
         inputEvents();
         firstStep();
-        mainSteps(updates);
+        for (int i = 0; i < ups; i++) {
+            mainSteps(i, ups); //TODO: Concurrent updates?
+        }
         lastStep();
     }
 
@@ -75,7 +80,10 @@ public abstract class AbstractLogic implements AutoCloseable {
     /**
      * Finalize
      */
-    public abstract void end();
+    public void end() {
+        renderer.cleanup();
+
+    }
 
     public boolean closing() {
         return window.closing();

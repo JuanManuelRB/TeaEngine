@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryStack;
 
 import io.ResourceLoader;
+import org.lwjgl.system.MemoryUtil;
 
 import static org.lwjgl.opengl.GL20.*;
 

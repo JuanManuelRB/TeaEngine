@@ -26,7 +26,6 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
         // El callback puede cambiarse para que sea mas util que solo la salida estandar.
         // The callback can be changed to another output.
         GLFWErrorCallback.createPrint(System.err).set();
-
     }
 
     /**

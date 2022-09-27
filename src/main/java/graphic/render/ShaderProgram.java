@@ -175,13 +175,6 @@ public class ShaderProgram implements AutoCloseable {
         glUseProgram(0);
     }
 
-    public void cleanup() {
-        unbind();
-        if (programID != 0) {
-            glDeleteProgram(programID);
-        }
-    }
-
 //    public int generarEBO() {
 //        // Guardar array en memoria
 //        IntBuffer elementBuffer = MemoryUtil.memAllocInt(elementArray.length);
@@ -195,6 +188,12 @@ public class ShaderProgram implements AutoCloseable {
 //        return elementBuffer;
 //    }
 
+    /**
+     * VAO?
+     * @param positionSize
+     * @param colorSize
+     * @param floatSizeBytes
+     */
     public void createAttribPointer(int positionSize, int colorSize, int floatSizeBytes) {
         glVertexAttribPointer(0, positionSize,GL_FLOAT, false, vertexSizeBytes, 0);
         glEnableVertexAttribArray(0);
@@ -205,6 +204,9 @@ public class ShaderProgram implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        cleanup();
+        unbind();
+        if (programID != 0) {
+            glDeleteProgram(programID);
+        }
     }
 }

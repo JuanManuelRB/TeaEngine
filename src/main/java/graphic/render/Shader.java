@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL20;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.lwjgl.opengl.GL20.*;
 
@@ -47,14 +48,10 @@ public final class Shader implements AutoCloseable{
 	public Optional<Integer> uniform(String name) {
 		return Optional.of(uniforms.get(name));
 	}
-	public void uniforms() {
-		return uniforms.;
+	public Set<Map.Entry<String, Integer>> uniforms() {
+		return uniforms.entrySet();
 	}
-//	public Map<String, Integer> uniforms() {
 
-//		return uniforms;
-
-//	}
 
 	@Override
 	public boolean equals(Object o) {
@@ -73,11 +70,11 @@ public final class Shader implements AutoCloseable{
 	}
 
 	public void create(String shaderCode, Type type) throws ShaderError {
-		int shaderID = switch (type) {
-			case Vertex -> glCreateShader(type.typeID());
-			case Fragment -> glCreateShader(type.typeID());
-			default -> {}
-		}
+		int shaderID = glCreateShader(type.typeID());
+		if (shaderID == 0)
+			throw new ShaderError("Error when creating shader of type: " + type);
+
+		glShaderSource(shaderID, shaderCode);
 
 	}
 

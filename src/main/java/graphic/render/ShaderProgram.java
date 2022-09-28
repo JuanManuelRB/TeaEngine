@@ -20,8 +20,7 @@ import static org.lwjgl.opengl.GL20.*;
  * This class creates a valid shader program and stores it.
  */
 public class ShaderProgram implements AutoCloseable {
-    private final int programID; // TODO: convert to record?
-    private int vertexShaderID, fragmentShaderID, geometryShaderID; // TODO: geometry shader
+    private final int programID;
     private final Map<String, Integer> uniforms;
 
 
@@ -139,6 +138,11 @@ public class ShaderProgram implements AutoCloseable {
 
         glAttachShader(programID, shaderId);
         return shaderId;
+    }
+
+    public void attachShader(Shader shader) {
+        glAttachShader(programID, shader.id());
+
     }
 
     /**

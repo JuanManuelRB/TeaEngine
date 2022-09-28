@@ -3,27 +3,30 @@ package graphic.render;
 import static org.lwjgl.opengl.GL32.*;
 
 public abstract sealed class Shader implements AutoCloseable permits VertexShader, FragmentShader, GeometryShader {
-	private final int shaderID;
+	private final int id;
 	public Shader(String code, Type shaderType) throws ShaderError {
-		shaderID = glCreateShader(shaderType.typeID);
-		if (shaderID == 0)
-			throw new ShaderError("Error when creating shader of type: " + shaderType.typeID);
+		id = glCreateShader(shaderType.id());
+		if (id == 0)
+			throw new ShaderError("Error when creating shader of type: " + shaderType.id);
 
-		glShaderSource(shaderID, code);
-		glCompileShader(shaderID);
+		glShaderSource(id, code);
+		glCompileShader(id);
 
-		if (glGetShaderi(shaderID, GL_COMPILE_STATUS) == GL_FALSE)
+		if (glGetShaderi(id, GL_COMPILE_STATUS) == GL_FALSE)
 			throw new ShaderError("Error compiling the shader: "
-					+ glGetShaderInfoLog(shaderID, 1024));
+					+ glGetShaderInfoLog(id, 1024));
 	}
 
-	public int shaderID() {
-		return shaderID;
+	public int id() {
+		return id;
 	}
 
+	/**
+	 * Deletes the shader.
+	 */
 	@Override
 	public void close() {
-		glDeleteShader(shaderID);
+		glDeleteShader(id);
 	}
 
 
@@ -35,20 +38,26 @@ public abstract sealed class Shader implements AutoCloseable permits VertexShade
 //		return uniforms.entrySet();
 //	}
 
-
+	/**
+	 * Types of possible shaders.
+	 */
 	public enum Type {
 		VERTEX(GL_VERTEX_SHADER),
 		FRAGMENT(GL_FRAGMENT_SHADER),
 		GEOMETRY(GL_GEOMETRY_SHADER);
 
-		private final int typeID;
+		private final int id;
 
-		private Type(int typeID) {
-			this.typeID = typeID;
+		Type(int id) {
+			this.id = id;
 		}
 
-		public int typeID() {
-			return typeID;
+		/**
+		 *
+		 * @return the GL shader type.
+		 */
+		public int id() {
+			return id;
 		}
 	}
 }

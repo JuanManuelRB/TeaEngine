@@ -1,5 +1,5 @@
 package aplication;
 
-public sealed interface Setting permits ApplicationSetting, GameSetting {
+public sealed interface Setting permits AbstractSetting, ApplicationSetting, GameSetting {
     void setName(String title);
 }

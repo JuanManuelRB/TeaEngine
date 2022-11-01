@@ -11,14 +11,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>18</maven.compiler.source>
-        <maven.compiler.target>18</maven.compiler.target>
+        <maven.compiler.source>19</maven.compiler.source>
+        <maven.compiler.target>19</maven.compiler.target>
 
-        <java.version>18.0.1</java.version>
-        <kotlin.version>1.7.0</kotlin.version>
+        <java.version>19</java.version>
+        <kotlin.version>1.7.20</kotlin.version>
 
 
-        <lwjgl.version>3.3.1-SNAPSHOT</lwjgl.version>
+        <lwjgl.version>3.3.1</lwjgl.version>
         <joml.version>1.10.2</joml.version>
         <lwjgl3-awt.version>0.1.8</lwjgl3-awt.version>
     </properties>

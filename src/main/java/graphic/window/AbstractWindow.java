@@ -1,14 +1,12 @@
 package graphic.window;
 
-import aplication.Size;
-import aplication.Position;
 import graphic.render.Viewer;
-import graphic.scene.View;
-import io.inputs.AbstractGamepadListener;
-import io.inputs.AbstractKeyListener;
-import io.inputs.AbstractMouseListener;
+import io.inputs.*;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+
+import java.util.Map;
 
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 
@@ -17,10 +15,11 @@ import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
  * This class represents a basic window without logic, which the engine needs to run.
  */
 public abstract class AbstractWindow implements Viewer, AutoCloseable {
-    final AbstractWindowListener windowListener;
-    final AbstractMouseListener mouseListener;
-    final AbstractKeyListener keyListener;
-    final AbstractGamepadListener gamepadListener;
+    final WindowListener windowListener;
+    final MouseListener mouseListener;
+    final KeyListener keyListener;
+    final GamepadListener gamepadListener;
+    final MonitorListener monitorListener;
 
     static {
         // El callback puede cambiarse para que sea mas util que solo la salida estandar.
@@ -32,27 +31,26 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      * Default constructor for the Window implementation.
      * Sets the listeners to the window.
      *
-     * @param windowListener AN instance of AbstractWindowListener.
-     * @param mouseListener AN instance of AbstractMouseListener.
-     * @param keyListener AN instance of AbstractKeyListener.
-     * @param gamepadListener AN instance of AbstractGamepadListener.
+     * @param applicationListeners listeners of the application.
      */
-    public AbstractWindow(
-            AbstractWindowListener windowListener,
-            AbstractMouseListener mouseListener,
-            AbstractKeyListener keyListener,
-            AbstractGamepadListener gamepadListener
-        ) {
+    public AbstractWindow(@NotNull ApplicationListeners applicationListeners) {
 
         // Check GLFW initialization
         if (!GLFW.glfwInit())
             throw new IllegalStateException("No ha sido posible inicializar GLFW");
 
-        this.windowListener = windowListener;
-        this.mouseListener = mouseListener;
-        this.keyListener = keyListener;
-        this.gamepadListener = gamepadListener;
+        // If exist listener assign it, else assign default listener. TODO
+        this.windowListener = applicationListeners.windowListener().orElse(null);
+        this.mouseListener = applicationListeners.mouseListener().orElse(DefaultMouseListener.get());
+        this.keyListener = applicationListeners.keyListener().orElse(DefaultKeyListener.get());
+        this.gamepadListener = applicationListeners.gamepadListener().orElse(DefaultGamepadListener.get());
+        this.monitorListener = applicationListeners.monitorListener().orElse(DefaultMonitorListener.get());
 
+    }
+
+    public static Map<Integer, Long> listMonitors() {
+        // return glfwGetMonitors().get();
+        return null;
     }
 
     /**
@@ -64,7 +62,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      *
      * @return Window listener in use.
      */
-    public AbstractWindowListener windowListener() {
+    public WindowListener windowListener() {
         return windowListener;
     }
 
@@ -72,7 +70,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      *
      * @return Mouse listener in use.
      */
-    public AbstractMouseListener mouseListener() {
+    public MouseListener mouseListener() {
         return mouseListener;
     }
 
@@ -80,7 +78,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      *
      * @return Key listener in use.
      */
-    public AbstractKeyListener keyListener() {
+    public KeyListener keyListener() {
         return keyListener;
     }
 
@@ -88,7 +86,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      *
      * @return Gamepad listener in use.
      */
-    public AbstractGamepadListener gamepadListener() {
+    public GamepadListener gamepadListener() {
         return gamepadListener;
     }
 

@@ -1,7 +1,7 @@
 package graphic.render;
 
+import graphic.render.shader.Shader;
 import graphic.scene.View;
-import graphic.window.AbstractWindow;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
@@ -15,7 +15,7 @@ import static org.lwjgl.opengl.GL15.*;
  * This class
  */
 public final class Renderer implements Runnable, AutoCloseable {
-    private ShaderProgram shaderProgram;
+    private ShaderProgram program;
 
     /**
      * Field of View in Radians
@@ -47,14 +47,14 @@ public final class Renderer implements Runnable, AutoCloseable {
 
     public void init() throws IOException {
         // Create Shader Program
-        shaderProgram = new ShaderProgram();
-        shaderProgram.createVertexShader(Path.of("src/main/resources/Shaders/vertex/vertex.vs"));
-        shaderProgram.createFragmentShader(Path.of("src/main/resources/Shaders/fragments/fragment.fs"));
-        shaderProgram.link();
+        program = new ShaderProgram();
+        program.createVertexShader(Path.of("src/main/resources/Shaders/vertex/vertex.vs"));
+        program.createFragmentShader(Path.of("src/main/resources/Shaders/fragments/fragment.fs"));
+        program.link();
 
         // Create the uniforms
-        shaderProgram.createUniform("proyectionMatrix");
-        shaderProgram.createUniform("worldMatrix");
+        program.createUniform("proyectionMatrix");
+        program.createUniform("worldMatrix");
 
     }
 
@@ -79,11 +79,11 @@ public final class Renderer implements Runnable, AutoCloseable {
 
         clear();
 
-        shaderProgram.bind();
+        program.use();
 
         // Update projection Matrix
         Matrix4f projectionMatrix = Transformation.getProjectionMatrix(FOV, viewer.getWidth(), viewer.getHeight(), Z_NEAR, Z_FAR);
-        shaderProgram.setUniform("projectionMatrix", projectionMatrix);
+        program.setUniform("projectionMatrix", projectionMatrix);
 
         // Bind to the VAO TODO: ESTO NO HACE NADA! -> esta en mesh.render()
 //        glBindVertexArray(vaoId);
@@ -91,7 +91,7 @@ public final class Renderer implements Runnable, AutoCloseable {
 
         // Draw Mesh
         renderable.render();
-        shaderProgram.unbind();
+        program.unuse();
 
         // shaderProgram.getEBO(elementArray);TODO
         // shaderProgram.createAttribPointer(positionSize, colorSize, floatSizeBytes);
@@ -108,15 +108,11 @@ public final class Renderer implements Runnable, AutoCloseable {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    public void cleanup() {
-        if (shaderProgram != null)
-            shaderProgram.cleanup();
-    }
-
 
     @Override
     public void close() throws Exception {
-
+        if (program != null)
+            program.close();
     }
 
 

@@ -1,8 +1,8 @@
 package aplication;
 
-import engine.FirstStep;
-import engine.LastStep;
-import engine.Step;
+import engine.application.PostStep;
+import engine.application.PreStep;
+import engine.application.Step;
 
-public interface Steps extends Step, FirstStep, LastStep {
+public interface Steps extends Step, PreStep, PostStep {
 }

@@ -1,30 +1,28 @@
 package graphic.scene;
 
-import graphic.GraphicElement;
-import graphic.render.Renderable;
-import graphic.render.Renderer;
-import org.jetbrains.annotations.NotNull;
+import engine.physics.geometricalgebra.Geometric;
 
-import java.util.TreeSet;
-import java.util.Vector;
+import java.util.List;
+
 
 /**
  * A Scene represents a state of the application, and holds the logic about it. The scene is also in charge of managing
  * where the elements are going to be displayed, this is done by holding View instances.
  */
-public interface Scene {
+public class Scene<T extends GameObject<?>> implements GameObject<T> {
     // TODO: Callbacks so other scenes can know the scene state (Executing, Shown, Hidden, etc).
     // Provide access to views to allow them to be rendered?
-    Renderer renderer = new Renderer(); // TODO: Provided? The Scene is not rendered, the view is?
 
-    default void onStart(){}
-    default void onEnd(){}
+    private Geometric.Vector sceneSize;
 
-    default void start() {
-        onStart();
-        onEnd();
+
+    @Override
+    public List<T> childGameObjects() {
+        return null;
     }
 
-
-
+    @Override
+    public <T1 extends GameObject<T>> T1 parentGameObject() {
+        return null;
+    }
 }

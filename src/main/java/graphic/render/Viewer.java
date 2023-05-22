@@ -1,39 +1,28 @@
 package graphic.render;
 
 import graphic.scene.View;
-import graphic.window.AbstractWindow;
+import physics.dynamics.Position;
 
 
 /**
  * View consumer. Consumes a view and displays it.
  */
+@FunctionalInterface
 public interface Viewer {
 
-    //TODO: Viewer consumes one or more views and displays them.
-    // Views can be resized, and moved on the Viewer. So the Viewer has coordinates
     /**
      * Gets views and displays them.
      * The views are composed in a single view in the process.
      *
      * @param view to display.
      */
-    abstract void display(ViewDisplay... view);
-    
-    default void display(short updates, ViewDisplay view) {
-        var v = new ViewDisplay[] {view};
-        display(v);
-    }
+    void display(View view, Position position, Size size);
+
     /**
      *
      * @return the GLFW context
      */
-    abstract long getContext();
-
-
-    int getWidth();
-
-    int getHeight();
-
-    record ViewDisplay(View view, int windowPosX, int windowPosY) {}
-
+    default long getContext() {
+        return 0;
+    }
 }

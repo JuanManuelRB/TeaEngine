@@ -1,10 +1,9 @@
 package graphic.window;
 
-import aplication.Position;
-import aplication.Size;
-import io.inputs.AbstractGamepadListener;
-import io.inputs.AbstractKeyListener;
-import io.inputs.AbstractMouseListener;
+import io.inputs.GamepadListener;
+import io.inputs.KeyListener;
+import io.inputs.MonitorListener;
+import io.inputs.MouseListener;
 
 public interface WindowBuilder<T extends AbstractWindow> {
     /**
@@ -44,10 +43,11 @@ public interface WindowBuilder<T extends AbstractWindow> {
     WindowBuilder<T> alignment(AbstractWindow.Alignment alignment);
 
 
-    WindowBuilder<T> windowListener(AbstractWindowListener listener);
-    WindowBuilder<T> mouseListener(AbstractMouseListener listener);
-    WindowBuilder<T> keyListener(AbstractKeyListener listener);
-    WindowBuilder<T> gamepadListener(AbstractGamepadListener listener);
+    WindowBuilder<T> windowListener(WindowListener listener);
+    WindowBuilder<T> mouseListener(MouseListener listener);
+    WindowBuilder<T> keyListener(KeyListener listener);
+    WindowBuilder<T> gamepadListener(GamepadListener listener);
+    WindowBuilder<Window> monitorListener(MonitorListener listener);
 
 
 }

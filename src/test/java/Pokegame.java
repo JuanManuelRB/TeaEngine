@@ -1,9 +1,4 @@
-import aplication.Application;
-import engine.Logic;
-import graphic.window.AbstractWindow;
-
-import java.nio.file.Path;
-
+/*
 public class Pokegame extends Application {
 
     public static void main(String[] args) {
@@ -22,7 +17,8 @@ public class Pokegame extends Application {
 
 
 
-    /*
+    */
+/*
     private static class Cube extends Element {
         private Path material;
         private Logic logic;
@@ -52,5 +48,7 @@ public class Pokegame extends Application {
 
     public static class Element {
     }
-    */
+    *//*
+
 }
+*/

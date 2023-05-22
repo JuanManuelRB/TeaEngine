@@ -1,14 +1,16 @@
 package graphic.window;
 
-import aplication.Position;
-import aplication.Size;
 import graphic.scene.View;
-import io.inputs.*;
+import io.inputs.GamepadListener;
+import io.inputs.KeyListener;
+import io.inputs.MonitorListener;
+import io.inputs.MouseListener;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
+
+import java.util.Optional;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
@@ -23,14 +25,12 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  *      Window window = Window.builder().build();
  *      window.create();
  *
- *
  * }
  * TODO
  *
  */
 public final class Window extends AbstractWindow {
     private final long glfwWindow;
-
 
     /**
      * Creates a new window, and initialises GLFW.
@@ -47,12 +47,8 @@ public final class Window extends AbstractWindow {
      * 
      */
     private Window(String title, int width, int height, int posX, int posY, WindowMode mode, Alignment alignment,
-                   AbstractWindowListener windowListener,
-                   AbstractMouseListener mouseListener,
-                   AbstractKeyListener keyListener,
-                   AbstractGamepadListener gamepadListener
-    ) throws IllegalStateException {
-        super(windowListener, mouseListener, keyListener, gamepadListener);
+                   ApplicationListeners applicationListeners) throws IllegalStateException {
+        super(applicationListeners);
 
 
         // Configurar GLFW
@@ -103,7 +99,7 @@ public final class Window extends AbstractWindow {
     }
 
     @Override
-    public void display(ViewDisplay... view) {
+    public void display(View view, physics.dynamics.Position position, Size size) {
 
     }
 
@@ -126,6 +122,9 @@ public final class Window extends AbstractWindow {
             glfwSetFramebufferSizeCallback(getContext(), windowListener::frameBufferSizeCallback);// Tamaño en pixeles para OpenGL
             glfwSetWindowFocusCallback(getContext(), windowListener::focusCallback);              // Foco
             glfwSetWindowCloseCallback(getContext(), windowListener::closeCallback);              // Cierre
+
+            // Monitor
+            glfwSetMonitorCallback(monitorListener::monitorCallback);
 
             // Mouse Callbacks
             glfwSetCursorPosCallback(getContext(), mouseListener::mousePosCallback);        // Posición de ratón
@@ -158,7 +157,6 @@ public final class Window extends AbstractWindow {
 
         // Set to a default color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
     }
 
     @Override
@@ -172,6 +170,17 @@ public final class Window extends AbstractWindow {
             glClearColor(red, green, blue, alpha);
     }
 
+    private int[] getPositionArr() {
+        try(var stack = MemoryStack.stackPush()) {
+            var pPosX = stack.mallocInt(1);
+            var pPosY = stack.mallocInt(1);
+
+            glfwGetWindowPos(getContext(), pPosX, pPosY);
+
+            return new int[] {pPosX.get(), pPosY.get()};
+        }
+    }
+
 
     /**
      *
@@ -179,14 +188,7 @@ public final class Window extends AbstractWindow {
      */
     @Override
     public int getPosX() {
-        try(var stack = MemoryStack.stackPush()) {
-            var pPosX = stack.mallocInt(1);
-            var pPosY = stack.mallocInt(1);
-
-            glfwGetWindowPos(getContext(), pPosX, pPosY);
-
-            return pPosX.get();
-        }
+        return getPositionArr()[0];
     }
 
     /**
@@ -195,14 +197,7 @@ public final class Window extends AbstractWindow {
      */
     @Override
     public int getPosY() {
-        try(var stack = MemoryStack.stackPush()) {
-            var pPosX = stack.mallocInt(1);
-            var pPosY = stack.mallocInt(1);
-
-            glfwGetWindowPos(getContext(), pPosX, pPosY);
-
-            return pPosY.get();
-        }
+        return getPositionArr()[1];
     }
 
     /**
@@ -211,14 +206,18 @@ public final class Window extends AbstractWindow {
      */
     @Override
     public Position getPosition() {
-        try(var stack = MemoryStack.stackPush()) {
-            var pPosX = stack.mallocInt(1);
-            var pPosY = stack.mallocInt(1);
+        return new Position(getPositionArr()[0], getPositionArr()[1], 0);
+    }
 
-            glfwGetWindowPos(getContext(), pPosX, pPosY);
+    private int[] getSizeArr() {
+        try ( var stack = MemoryStack.stackPush() ) {
+            var pWidth = stack.mallocInt(1);  // int*
+            var pHeight = stack.mallocInt(1); // int*
 
-            return new Position(pPosX.get(), pPosY.get(), 0);
-        
+            // Get the window size
+            glfwGetWindowSize(getContext(), pWidth, pHeight);
+
+            return new int[]{pWidth.get(), pHeight.get()};
         }
     }
 
@@ -228,15 +227,7 @@ public final class Window extends AbstractWindow {
      */
     @Override
     public int getWidth() {
-        try ( var stack = MemoryStack.stackPush() ) {
-            var pWidth = stack.mallocInt(1);  // int*
-            var pHeight = stack.mallocInt(1); // int*
-
-            // Get the window size
-            glfwGetWindowSize(getContext(), pWidth, pHeight);
-
-            return pWidth.get(0);
-        }
+        return getSizeArr()[0];
     }
 
     /**
@@ -245,15 +236,7 @@ public final class Window extends AbstractWindow {
      */
     @Override
     public int getHeight() {
-        try ( MemoryStack stack = MemoryStack.stackPush() ) {
-            var pWidth = stack.mallocInt(1);  // int*
-            var pHeight = stack.mallocInt(1); // int*
-
-            // Get the window size
-            glfwGetWindowSize(getContext(), pWidth, pHeight);
-
-            return pHeight.get(0);
-        }
+        return getSizeArr()[1];
     }
 
     /**
@@ -262,15 +245,8 @@ public final class Window extends AbstractWindow {
      */
     @Override
     public Size getSize() {
-        try ( MemoryStack stack = MemoryStack.stackPush() ) {
-            var pWidth = stack.mallocInt(1);  // int pointer
-            var pHeight = stack.mallocInt(1); // int pointer
+        return new Size(getSizeArr()[0], getSizeArr()[1], 0);
 
-            // Get the window size
-            glfwGetWindowSize(getContext(), pWidth, pHeight);
-
-            return new Size(pWidth.get(0), pHeight.get(0), 0);
-        }
     }
 
     @Override
@@ -288,13 +264,13 @@ public final class Window extends AbstractWindow {
         // TODO
     }
 
-    public static class Listener extends AbstractWindowListener {
+    public static class Listener extends WindowListener {
         int posX, posY, width, height;
         private int frameBufferHeight;
         private int frameBufferWidth;
         private boolean focus, closing = false;
 
-        private static Listener listenerInstance;
+        private static Listener defaultWindowListenerInstance;
 
         private Listener() {}
 
@@ -304,10 +280,10 @@ public final class Window extends AbstractWindow {
          * @return WindowListener
          */
         public static Listener get() {
-            if (listenerInstance == null)
-                listenerInstance = new Listener();
+            if (defaultWindowListenerInstance == null)
+                defaultWindowListenerInstance = new Listener();
 
-            return listenerInstance;
+            return defaultWindowListenerInstance;
         }
 
         @Override
@@ -394,15 +370,24 @@ public final class Window extends AbstractWindow {
         private int xPos = 0, yPos = 0;
         private WindowMode windowMode = WindowMode.WINDOWED;
         private Alignment alignment = Alignment.CENTER;
-        private AbstractWindowListener windowListener = Listener.get();
-        private AbstractMouseListener mouseListener = MouseListener.get();
-        private AbstractKeyListener keyListener = KeyListener.get();
-        private AbstractGamepadListener gamepadListener = GamepadListener.get();
+        private WindowListener windowListener;
+        private MouseListener mouseListener;
+        private KeyListener keyListener;
+        private GamepadListener gamepadListener;
+        private MonitorListener monitorListener;
 
         @Override
         public Window build() {
-            return new Window(title, width, height, xPos, yPos, windowMode, alignment,
-                    windowListener, mouseListener, keyListener, gamepadListener);
+            return new Window(
+                    title, width, height, xPos, yPos, windowMode, alignment,
+                    new ApplicationListeners(
+                            Optional.ofNullable(windowListener),
+                            Optional.ofNullable(mouseListener),
+                            Optional.ofNullable(keyListener),
+                            Optional.ofNullable(gamepadListener),
+                            Optional.ofNullable(monitorListener)
+                    )
+            );
         }
 
         @Override
@@ -449,26 +434,32 @@ public final class Window extends AbstractWindow {
 
 
         @Override
-        public WindowBuilder<Window> windowListener(AbstractWindowListener listener) {
+        public WindowBuilder<Window> windowListener(WindowListener listener) {
             this.windowListener = listener;
             return this;
         }
 
         @Override
-        public WindowBuilder<Window> mouseListener(AbstractMouseListener listener) {
+        public WindowBuilder<Window> mouseListener(MouseListener listener) {
             this.mouseListener = listener;
             return this;
         }
 
         @Override
-        public WindowBuilder<Window> keyListener(AbstractKeyListener listener) {
+        public WindowBuilder<Window> keyListener(KeyListener listener) {
             this.keyListener = listener;
             return this;
         }
 
         @Override
-        public WindowBuilder<Window> gamepadListener(AbstractGamepadListener listener) {
+        public WindowBuilder<Window> gamepadListener(GamepadListener listener) {
             this.gamepadListener = listener;
+            return this;
+        }
+
+        @Override
+        public WindowBuilder<Window> monitorListener(MonitorListener listener) {
+            this.monitorListener = listener;
             return this;
         }
     }

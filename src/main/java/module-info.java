@@ -1,8 +1,8 @@
-module VoxelEngine {
+module voxelengine {
     requires org.lwjgl;
     requires org.lwjgl.glfw;
     requires org.lwjgl.opengl;
-    requires annotations;
+    requires geometricalgebra;
 
     requires transitive kotlin.stdlib;
 
@@ -10,7 +10,5 @@ module VoxelEngine {
     requires transitive org.lwjgl.glfw.natives;
 
     requires transitive org.joml;
-
-    opens
 
 }

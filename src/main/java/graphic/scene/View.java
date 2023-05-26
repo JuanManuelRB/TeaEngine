@@ -1,7 +1,9 @@
 package graphic.scene;
 
-import graphic.window.AbstractWindow;
+import graphic.render.Camera;
+import graphic.render.Viewer;
 import physics.dynamics.Position;
+import physics.dynamics.Size;
 
 /**
  *
@@ -16,11 +18,11 @@ public interface View {
 
     /**
      *
-     * @param window to render the view on.
+     * @param viewer to render the view on.
      * @param position
      */
-    default void renderInto(AbstractWindow window, Position position, Size scale) {
-        window.display(this, position, scale);
+    default void renderInto(Viewer viewer, Position position, Size scale) {
+        viewer.display(this, position, scale);
     }
 
 }

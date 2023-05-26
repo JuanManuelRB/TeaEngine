@@ -1,7 +1,7 @@
 package engine.application;
 
+import engine.Initializable;
 import engine.Logic;
-import engine.Starts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +12,16 @@ import java.util.concurrent.Executors;
 /**
  * Update logic for the application.
  */
-public abstract class ApplicationUpdate implements Logic, Starts, AutoCloseable {
+public abstract class ApplicationUpdate implements Logic, Initializable, AutoCloseable {
     private PreStep preStep;
-    private List<Step> steps = new ArrayList<>();
+    private Step[] steps;
     private PostStep postStep;
+
+    public ApplicationUpdate(PreStep preStep, Step[] steps, PostStep postStep) {
+        this.preStep = preStep;
+        this.steps = steps;
+        this.postStep = postStep;
+    }
 
     public ApplicationUpdate(PreStep preStep, Step step, PostStep postStep, int stepUpdates) {
         Objects.requireNonNull(step);
@@ -23,9 +29,10 @@ public abstract class ApplicationUpdate implements Logic, Starts, AutoCloseable 
         this.preStep = preStep;
         this.postStep = postStep;
 
-        // Poblate steps with the same step logic.
+        steps = new Step[stepUpdates];
         for (int i = 0; i < stepUpdates; i++)
-            this.steps.add(step);
+            steps[i] = step;
+
     }
 
     public ApplicationUpdate(PreStep preStep, Step step, PostStep postStep) {
@@ -38,12 +45,6 @@ public abstract class ApplicationUpdate implements Logic, Starts, AutoCloseable 
 
     public ApplicationUpdate(Step step) {
         this(null, step, null, 1);
-    }
-
-    public ApplicationUpdate(PreStep preStep, List<Step> steps, PostStep postStep) {
-        this.preStep = preStep;
-        this.steps = steps;
-        this.postStep = postStep;
     }
 
     @Override
@@ -62,18 +63,22 @@ public abstract class ApplicationUpdate implements Logic, Starts, AutoCloseable 
         return this;
     }
 
-    public ApplicationUpdate setSteps(List<Step> steps) {
+    public ApplicationUpdate setSteps(Step[] steps) {
         this.steps = steps;
         return this;
     }
 
     public ApplicationUpdate addStep(Step step) {
-        this.steps.add(step);
+        List<Step> steps = new ArrayList<>(List.of(this.steps));
+        steps.add(step);
+        this.steps = steps.toArray(new Step[0]);
         return this;
     }
 
-    public ApplicationUpdate addSteps(List<Step> steps) {
-        this.steps.addAll(steps);
+    public ApplicationUpdate addSteps(Step[] steps) {
+        List<Step> stepsList = new ArrayList<>(List.of(this.steps));
+        stepsList.addAll(List.of(steps));
+        this.steps = stepsList.toArray(new Step[0]);
         return this;
     }
 

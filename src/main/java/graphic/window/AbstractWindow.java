@@ -1,10 +1,12 @@
 package graphic.window;
 
+import graphic.render.Renderer;
 import graphic.render.Viewer;
 import io.inputs.*;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import physics.dynamics.Position;
+import physics.dynamics.Size;
 
 import java.util.Map;
 
@@ -20,6 +22,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
     final KeyListener keyListener;
     final GamepadListener gamepadListener;
     final MonitorListener monitorListener;
+    final Renderer renderer;
 
     static {
         // El callback puede cambiarse para que sea mas util que solo la salida estandar.
@@ -33,7 +36,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      *
      * @param applicationListeners listeners of the application.
      */
-    public AbstractWindow(@NotNull ApplicationListeners applicationListeners) {
+    public AbstractWindow(ApplicationListeners applicationListeners) {
 
         // Check GLFW initialization
         if (!GLFW.glfwInit())

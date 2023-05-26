@@ -15,20 +15,13 @@ public abstract class ApplicationLogic extends ApplicationUpdate {
     private int renderUpdatesPerSecond = 30;
 
     public ApplicationLogic(Renderer renderer, AbstractWindow window) {
-        super((PreStep) null, (Step) null, null);
+        super((PreStep) null, (Step) null, null); // TODO
         this.renderer = renderer;
         this.window = window;
     }
 
     /**
-     * Init method of the application. All the initialization should be made here.
-     *
-     * @throws Exception Initialization exception.
-     */
-    public abstract void init() throws Exception;
-
-    /**
-     * This method is called once before each cicle of steps.
+     * This method is called once before each update.
      */
     public abstract void inputEvents();
 
@@ -51,7 +44,7 @@ public abstract class ApplicationLogic extends ApplicationUpdate {
     public abstract void render() throws Exception;
 
     @Override
-    public void close() throws Exception {
+    public final void close() throws Exception {
         window.close();
         renderer.close();
     }

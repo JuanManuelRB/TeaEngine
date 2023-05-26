@@ -1,14 +1,10 @@
-module voxelengine {
+module vengine {
     requires org.lwjgl;
     requires org.lwjgl.glfw;
     requires org.lwjgl.opengl;
-    requires geometricalgebra;
+    requires org.joml;
 
+    requires transitive gealma;
     requires transitive kotlin.stdlib;
-
-    requires transitive org.lwjgl.natives;
-    requires transitive org.lwjgl.glfw.natives;
-
-    requires transitive org.joml;
-
+    requires org.lwjgl.stb;
 }

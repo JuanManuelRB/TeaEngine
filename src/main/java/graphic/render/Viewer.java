@@ -2,21 +2,27 @@ package graphic.render;
 
 import graphic.scene.View;
 import physics.dynamics.Position;
+import physics.dynamics.Size;
 
 
 /**
  * View consumer. Consumes a view and displays it.
  */
-@FunctionalInterface
 public interface Viewer {
 
     /**
-     * Gets views and displays them.
-     * The views are composed in a single view in the process.
-     *
+     * Display a view in a position.
      * @param view to display.
+     * @param position of the view.
+     * @param size of the view.
      */
     void display(View view, Position position, Size size);
+
+    /**
+     *
+     * @return the renderer in use.
+     */
+    Renderer renderer();
 
     /**
      *
@@ -25,4 +31,5 @@ public interface Viewer {
     default long getContext() {
         return 0;
     }
+
 }

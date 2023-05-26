@@ -1,4 +1,4 @@
-module vengine {
+module teaengine {
     requires org.lwjgl;
     requires org.lwjgl.glfw;
     requires org.lwjgl.opengl;

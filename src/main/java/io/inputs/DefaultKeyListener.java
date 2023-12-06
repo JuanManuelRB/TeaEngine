@@ -30,7 +30,7 @@ public class DefaultKeyListener extends KeyListener {
 	/**
 	 * Returns true when the key is active.
 	 *
-	 * @param key An integer which value corresponds to a keyboard key.
+	 * @param key An integer which value corresponds target a keyboard key.
 	 * @return True if the key is pressed, False if the key is not pressed.
 	 */
 	@Override

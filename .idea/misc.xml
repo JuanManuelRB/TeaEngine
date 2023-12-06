@@ -7,8 +7,16 @@
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/../GeAlMa/pom.xml" />
         <option value="$PROJECT_DIR$/../GeAlMaKt/pom.xml" />
+        <option value="$PROJECT_DIR$/../TeaDemo/pom.xml" />
       </list>
     </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/../TeaDemo/pom.xml" />
+      </set>
+    </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_20_PREVIEW" project-jdk-name="20" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_21_PREVIEW" project-jdk-name="21" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/../TeaDemo/target/classes" />
+  </component>
 </project>

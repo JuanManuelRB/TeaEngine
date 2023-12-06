@@ -1,22 +1,20 @@
 package graphic.render;
 
-import graphic.scene.View;
-import physics.dynamics.Position;
+import juanmanuel.gealma.vga.vga3.Vector3;
 import physics.dynamics.Size;
 
 
 /**
- * View consumer. Consumes a view and displays it.
+ * Allows target display a view in a context. The context is a GLFW window. The view is displayed by a renderer.
  */
 public interface Viewer {
-
     /**
-     * Display a view in a position.
-     * @param view to display.
+     * Display a view with a defined position and size in the context.
+     * @param view target display.
      * @param position of the view.
      * @param size of the view.
      */
-    void display(View view, Position position, Size size);
+    void display(View view, Vector3 position, Size size);
 
     /**
      *
@@ -32,4 +30,23 @@ public interface Viewer {
         return 0;
     }
 
+    /**
+     *
+     * @return the width of the viewer.
+     */
+    default int getWidth() {
+        return 0;
+    }
+
+    /**
+     *
+     * @return the height of the viewer.
+     */
+    default int getHeight() {
+        return 0;
+    }
+
+    void makeContextCurrent();
+
+    void setClearColor(float r, float g, float b, float a);
 }

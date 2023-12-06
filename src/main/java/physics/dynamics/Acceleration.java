@@ -1,6 +1,7 @@
 package physics.dynamics;
 
-import juanmanuel.gealma.threedimensional.Vector3;
+
+import juanmanuel.gealma.vga.vga3.Vector3;
 
 public record Acceleration(Vector3 accelerationVector) {
     public Force times(Mass mass) {

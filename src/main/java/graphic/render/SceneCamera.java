@@ -1,4 +1,4 @@
 package graphic.render;
 
-public class SceneCamera extends Camera {
+public class SceneCamera {
 }

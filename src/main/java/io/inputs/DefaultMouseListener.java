@@ -51,6 +51,11 @@ public class DefaultMouseListener extends MouseListener {
 	}
 
 	@Override
+	public void mouseEnterCallback(long window, int entered) {
+        return; // TODO: Implement
+	}
+
+	@Override
 	public boolean activeButton(int button) {
 		return get().buttons[button] != null && (get().buttons[button].isActive());
 	}

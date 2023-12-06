@@ -2,6 +2,9 @@ package engine;
 
 import org.lwjgl.Version;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 
 /**
  *
@@ -10,9 +13,9 @@ public abstract class Engine implements Runnable, AutoCloseable {
     private final Thread applicationThread;
     private final ApplicationLogic applicationLogic;
 
-    public Engine(String applicationName, ApplicationLogic applicationLogic) {
+    public Engine(String name, ApplicationLogic applicationLogic) {
         this.applicationLogic = applicationLogic;
-        applicationThread = new Thread(this, applicationName);
+        applicationThread = new Thread(this, name);
     }
 
     public Engine(ApplicationLogic applicationLogic) {
@@ -54,7 +57,7 @@ public abstract class Engine implements Runnable, AutoCloseable {
     }
 
     /**
-     * Main loop. Executed until the logic signals to end.
+     * Main loop. Executed until the logic signals target end.
      *
      * @throws Exception
      */
@@ -68,6 +71,26 @@ public abstract class Engine implements Runnable, AutoCloseable {
     private void update() throws Exception {
         // Primero se actualiza la lógica y luego se actualizan los gráficos.
         applicationLogic.update(); // TODO: El numero de actualizaciones sera variable segun el tiempo disponible.
-        applicationLogic.render(); // TODO: EL metodo renderizado debera efectuarse tantas veces como se indique.
+
+        try (ScheduledExecutorService renderExecutor = Executors.newScheduledThreadPool(1)) {
+            renderExecutor.scheduleAtFixedRate(() -> {
+                try {
+                    // TODO: El metodo renderizado debera efectuarse tantas veces como se indique.
+                    applicationLogic.render();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+            }, 0, 1000 / 30, java.util.concurrent.TimeUnit.MILLISECONDS);
+        }
+
+        Thread updateThread = new Thread(() -> {
+            try {
+                applicationLogic.update();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
     }
 }

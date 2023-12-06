@@ -14,6 +14,7 @@ public abstract sealed class Shader implements AutoCloseable permits VertexShade
 		glShaderSource(programID, sourceProgram);
 		glCompileShader(programID);
 
+		// TODO: Log the shader compilation.
 		if (glGetShaderi(programID, GL_COMPILE_STATUS) == GL_FALSE)
 			throw new ShaderError("Error compiling the shader: "
 					+ glGetShaderInfoLog(programID, 1024));
@@ -35,6 +36,7 @@ public abstract sealed class Shader implements AutoCloseable permits VertexShade
 		glShaderSource(programID, sourceProgram);
 		glCompileShader(programID);
 
+		// TODO: Log the shader compilation.
 		if (glGetShaderi(programID, GL_COMPILE_STATUS) == GL_FALSE) {
 			throw new ShaderError("Error compiling the shader: "
 					+ glGetShaderInfoLog(programID, 1024));

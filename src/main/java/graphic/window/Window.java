@@ -1,25 +1,29 @@
 package graphic.window;
 
-import graphic.scene.View;
+import graphic.render.Renderer;
+import graphic.render.View;
+import graphic.scene.Camera;
+import graphic.scene.ViewObject;
 import io.inputs.GamepadListener;
 import io.inputs.KeyListener;
 import io.inputs.MonitorListener;
 import io.inputs.MouseListener;
-import org.jetbrains.annotations.NotNull;
+import juanmanuel.gealma.vga.vga3.Vector3;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
+import physics.dynamics.Size;
 
-import java.util.Optional;
+import java.io.IOException;
+import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
  * Main Window of the application.
- * Holds a reference to the GLFW window and implements methods to change its behavior
+ * Holds a reference target the GLFW window and implements methods target change its behavior
  *
  * {@snippet lang=java:
  *      Window window = Window.builder().build();
@@ -31,41 +35,36 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  */
 public final class Window extends AbstractWindow {
     private final long glfwWindow;
+    private Renderer renderer;
+    private View mainView;
 
     /**
      * Creates a new window, and initialises GLFW.
      *
-     * OpenGL is not initialised yet, needs to be with {@code create()} before any atempt to acces the api.
+     * OpenGL is not initialised yet, needs target be with {@code create()} before any atempt target acces the api.
      * 
      * @param title of the window.
-     * @param width of the window.
-     * @param height of the window.
-     * @param posX coordinate X of the window in OpenGL coordinates.
-     * @param posY coordinate Y of the window in OpenGL coordinates.
-     * @param mode of the window.
-     * @param alignment of the window.
+     * @param options of the window.
      * 
      */
-    private Window(String title, int width, int height, int posX, int posY, WindowMode mode, Alignment alignment,
-                   ApplicationListeners applicationListeners) throws IllegalStateException {
+    private Window(String title, Options options, ApplicationListeners applicationListeners) throws IllegalStateException {
         super(applicationListeners);
-
 
         // Configurar GLFW
         glfwDefaultWindowHints();                  // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-        // TODO: create function that associates the window with a monitor or puts its value to NULL
+        // TODO: create function that associates the window with a monitor or puts its value target NULL
         //  if the window should be fullscreen.
 
         // Crear la ventana
-        this.glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
+        this.glfwWindow = glfwCreateWindow(options.width, options.height, title, NULL, NULL);
 
         if (glfwWindow == NULL)
             throw new IllegalStateException("Error: Window could not be created");
@@ -87,33 +86,7 @@ public final class Window extends AbstractWindow {
                     ((int) (videoMode.height() - size.height()) / 2)
             );
         }
-    }
 
-    /**
-     *
-     * @return a builder for the window.
-     */
-    @NotNull
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    @Override
-    public void display(View view, physics.dynamics.Position position, Size size) {
-
-    }
-
-    @Override
-    public long getContext() {
-        return glfwWindow;
-    }
-
-    /**
-     * Creates the window.
-     * Creates a GLFW window and initializes OpenGL. This step must be done before any calling to OpenGL.
-     */
-    @Override
-    protected void create() {
         // Set Callbacks
         {
             // Window Callbacks
@@ -140,23 +113,84 @@ public final class Window extends AbstractWindow {
         }
 
         // Sets the window as the actual context.
-        glfwMakeContextCurrent(getContext());
+        makeContextCurrent();
+        GL.createCapabilities();
+
+        System.out.println("OpenGL: " + glGetString(GL_VERSION));
+        System.out.println("GLFW: " + glfwGetVersionString());
 
         // Equivalente a usar VSync, se actualiza según la tasa de refresco de la ventana TODO
         glfwSwapInterval(1);
 
+        renderer = new Renderer(this);
+        Camera camera = new Camera(new Vector3(0, 0, 0));
+//        camera.projectionMatrix(getWidth(), getHeight()); TODO
+        try {
+            renderer.setView(new ViewObject(camera));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Window renderer(Renderer renderer) {
+        this.renderer = renderer;
+        return this;
+    }
+
+    @Override
+    public Renderer renderer() {
+        return renderer;
+    }
+
+    /**
+     *
+     * @return a builder for the window.
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    @Override
+    public void display(View view, Vector3 position, Size size) {
+        // TODO
+    }
+
+    @Override
+    public long getContext() {
+        return glfwWindow;
+    }
+
+    /**
+     * Creates the window.
+     */
+    @Override
+    public void create() {
+        makeContextCurrent();
         // Show the window
         glfwShowWindow(getContext());
 
-        // This line is critical for LWJGL's interoperation with GLFW's
-        // OpenGL context, or any context that is managed externally.
-        // LWJGL detects the context that is current in the current thread,
-        // creates the GLCapabilities instance and makes the OpenGL
-        // bindings available for use.
-        GL.createCapabilities();
+//        // TODO: this should be done in the renderer. Also, it should be done on each loop.
+//        // This line is critical for LWJGL's interoperation with GLFW's
+//        // OpenGL context, or any context that is managed externally.
+//        // LWJGL detects the context that is current in the current thread,
+//        // creates the GLCapabilities instance and makes the OpenGL
+//        // bindings available for use.
+//        GL.createCapabilities();
 
-        // Set to a default color
+        // Set target a default color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+
+
+    }
+
+    @Override
+    public void update() {
+        makeContextCurrent();
+        renderer.render();
+
+        glfwSwapBuffers(getContext());
+        glfwPollEvents();
     }
 
     @Override
@@ -205,8 +239,8 @@ public final class Window extends AbstractWindow {
      * @return A {@code Position} with the values of the X and Y position of the window.
      */
     @Override
-    public Position getPosition() {
-        return new Position(getPositionArr()[0], getPositionArr()[1], 0);
+    public Vector3 getPosition() {
+        return new Vector3(getPositionArr()[0], getPositionArr()[1], 0);
     }
 
     private int[] getSizeArr() {
@@ -255,13 +289,79 @@ public final class Window extends AbstractWindow {
     }
 
     @Override
-    public void setPosition(Position position) {
+    public void setPosition(Vector3 position) {
         // TODO
     }
 
     @Override
     public void align(Alignment alignment) {
         // TODO
+    }
+
+    public record Options(boolean resizable, int width, int height, int updatesPerSecond, int positionX, int positionY, WindowMode windowMode, Alignment alignment) {
+        public Options {
+            if (width <= 0 || height <= 0)
+                throw new IllegalArgumentException("Width and height must be greater than 0");
+            if (updatesPerSecond <= 0)
+                throw new IllegalArgumentException("Updates per second must be greater than 0");
+
+            Objects.requireNonNull(windowMode);
+            Objects.requireNonNull(alignment);
+        }
+
+        /**
+         * Default options for the window.
+         * <p>
+         *     <ul>
+         *         <li>Resizable: true</li>
+         *         <li>Width: 800</li>
+         *         <li>Height: 600</li>
+         *         <li>Updates per second: 60</li>
+         *         <li>Position X: 0</li>
+         *         <li>Position Y: 0</li>
+         *         <li>Window mode: Windowed</li>
+         *         <li>Alignment: Center</li>
+         *     </ul>
+         * </p>
+         *
+         */
+        public Options() {
+            this(true, 800, 600, 60, 0, 0, WindowMode.WINDOWED, Alignment.CENTER);
+        }
+
+        public Options resizable(boolean resizable) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options width(int width) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options height(int height) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options updatesPerSecond(int updatesPerSecond) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options positionX(int positionX) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options positionY(int positionY) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options windowMode(WindowMode windowMode) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+        public Options alignment(Alignment alignment) {
+            return new Options(resizable, width, height, updatesPerSecond, positionX, positionY, windowMode, alignment);
+        }
+
+
     }
 
     public static class Listener extends WindowListener {
@@ -361,33 +461,29 @@ public final class Window extends AbstractWindow {
          * This may or not, depending on the system, coincide with {@link #getHeight()}.
          */
         public static int getFrameBufferHeight() { return get().frameBufferHeight; }
-
     }
 
     public static class Builder implements WindowBuilder<Window> {
         private String title = "Ventana";
-        private int width = 480, height = 360;
-        private int xPos = 0, yPos = 0;
-        private WindowMode windowMode = WindowMode.WINDOWED;
-        private Alignment alignment = Alignment.CENTER;
-        private WindowListener windowListener;
-        private MouseListener mouseListener;
-        private KeyListener keyListener;
-        private GamepadListener gamepadListener;
-        private MonitorListener monitorListener;
+        private Options windowOptions = new Options();
+
+        private ApplicationListeners applicationListeners = new ApplicationListeners();
 
         @Override
         public Window build() {
-            return new Window(
-                    title, width, height, xPos, yPos, windowMode, alignment,
-                    new ApplicationListeners(
-                            Optional.ofNullable(windowListener),
-                            Optional.ofNullable(mouseListener),
-                            Optional.ofNullable(keyListener),
-                            Optional.ofNullable(gamepadListener),
-                            Optional.ofNullable(monitorListener)
-                    )
-            );
+            return new Window(title, windowOptions, applicationListeners);
+        }
+
+        @Override
+        public WindowBuilder<Window> resizable(boolean resizable) {
+            this.windowOptions = this.windowOptions.resizable(resizable);
+            return this;
+        }
+
+        @Override
+        public WindowBuilder<Window> updatesPerSecond(int updatesPerSecond) {
+            this.windowOptions = this.windowOptions.updatesPerSecond(updatesPerSecond);
+            return this;
         }
 
         @Override
@@ -398,68 +494,68 @@ public final class Window extends AbstractWindow {
 
         @Override
         public WindowBuilder<Window> width(int width) {
-            this.width = width;
+            this.windowOptions = this.windowOptions.width(width);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> height(int height) {
-            this.height = height;
+            this.windowOptions = this.windowOptions.height(height);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> positionX(int xPos) {
-            this.xPos = xPos;
+            this.windowOptions = this.windowOptions.positionX(xPos);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> positionY(int yPos) {
-            this.yPos = yPos;
+            this.windowOptions = this.windowOptions.positionY(yPos);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> screenMode(WindowMode windowMode) {
-            this.windowMode = windowMode;
+            this.windowOptions = this.windowOptions.windowMode(windowMode);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> alignment(AbstractWindow.Alignment alignment) {
-            this.alignment = alignment;
+            this.windowOptions = this.windowOptions.alignment(alignment);
             return this;
         }
 
 
         @Override
         public WindowBuilder<Window> windowListener(WindowListener listener) {
-            this.windowListener = listener;
+            this.applicationListeners = this.applicationListeners.withWindowListener(listener);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> mouseListener(MouseListener listener) {
-            this.mouseListener = listener;
+            this.applicationListeners = this.applicationListeners.withMouseListener(listener);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> keyListener(KeyListener listener) {
-            this.keyListener = listener;
+            this.applicationListeners = this.applicationListeners.withKeyListener(listener);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> gamepadListener(GamepadListener listener) {
-            this.gamepadListener = listener;
+            this.applicationListeners = this.applicationListeners.withGamepadListener(listener);
             return this;
         }
 
         @Override
         public WindowBuilder<Window> monitorListener(MonitorListener listener) {
-            this.monitorListener = listener;
+            this.applicationListeners = this.applicationListeners.withMonitorListener(listener);
             return this;
         }
     }

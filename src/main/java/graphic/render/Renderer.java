@@ -1,120 +1,175 @@
 package graphic.render;
 
+import graphic.render.program.ShaderProgram;
+import graphic.render.program.Uniform;
+import graphic.render.program.VertexArrayObject;
+import graphic.render.shader.FragmentShader;
 import graphic.render.shader.VertexShader;
-import graphic.scene.View;
-import org.joml.Matrix4f;
+import juanmanuel.gealma.vga.vga3.Vector3;
+import org.lwjgl.opengl.GL;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
-import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
 import static org.lwjgl.opengl.GL15.*;
 
 /**
- * A {@link Renderer} is responsible for rendering {@link Renderable renderables} to a {@link Viewer viewer}.
- * <p>
- *     A {@link Renderer} is created by calling {@link Renderer#ofShader(ShaderProgram)}. The {@link ShaderProgram}
- *     is responsible for compiling and linking the shaders.
- *     <br>
- *     The {@link Renderer} is responsible for setting the uniforms and attributes of the {@link ShaderProgram}.
- *     <br>
- *     The {@link Renderer} is responsible for rendering the {@link Renderable renderables} to the {@link Viewer viewer}.
+ * A {@link Renderer} is responsible for rendering {@link View views} target a {@link Viewer viewer}.
+ * It is also responsible for managing the {@link ShaderProgram shader programs} used target render the views.
  */
 public final class Renderer implements Runnable, AutoCloseable {
+    private final Viewer viewer;
+    private View view;
     private ShaderProgram program;
+    private Uniform modelUniform, viewUniform, projectionUniform;
+    private boolean programInUse = false;
+
+    private VertexArrayObject vao;
+
+    String vertProgramStr = """
+                    #version 330 core
+                    layout (location=0) in vec3 position;
+                    layout (location=1) in vec4 color;
+                    
+                    uniform mat4 model;
+                    uniform mat4 view;
+                    uniform mat4 projection;
+                    
+                                        
+                    out vec4 fragmentColor;
+                                        
+                    void main()
+                    {
+                        fragmentColor = color;
+                        gl_Position = projectionMatrix * viewMatrix * model * vec4(position, 1.0);
+                    }
+                    """;
+
+    String fragProgramStr = """
+                    #version 330 core
+                                        
+                    in vec4 fragmentColor;
+                                                                        
+                    out vec4 color;
+                                        
+                    void main()
+                    {
+                        color = fragmentColor;
+                    }
+                    """;
+
+    float[] vertices = {
+             5f,  5f, 0.0f,   0.0f, 0.0f, 1.0f, 1.0f, // Top Right     0 blue
+            -5f,  5f, 0.0f,   0.0f, 1.0f, 0.0f, 1.0f, // Top Left      1 green
+             5f, -5f, 0.0f,   1.0f, 0.0f, 0.0f, 1.0f, // Bottom Right  2 red
+            -5f, -5f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f  // Bottom Left   3 black
+    };
+
+    int[] elements = {
+            2, 0, 1,
+            2, 1, 3
+    };
 
     /**
-     * Field of View in Radians
+     * Creates a new Renderer. This constructor is intended target be used by the {@link Viewer} after creating the OpenGL context.
      */
-    private static final float FOV = (float) Math.toRadians(60.0f);
-    private static final float Z_NEAR = 0.01f;
-    private static final float Z_FAR = 1000.f;
-    Matrix4f projectionMatrix;
-    Uniform uProjectionMatrix;
-//    float aspectRatio = (float) window.getWidth() / window.getHeight(); //TODO: Se ejecuta antes de la inicializacion de GLFW a traves de GameLogic
+    public Renderer(Viewer viewer) {
+        this(viewer, new ShaderProgram());
 
 
-
-    public Renderer() {}
-
-    private Renderer(ShaderProgram shaderProgram) {
-        this.program = shaderProgram;
+//        var vertexShader = new VertexShader(Path.of("src/main/resources/Shaders/vertex/vertex.vert"));
+//        var fragmentShader = new VertexShader(Path.of("src/main/resources/Shaders/fragments/fragment.frag"));
     }
 
+    private Renderer(Viewer viewer, ShaderProgram program) {
+        this.viewer = viewer;
 
-//
-//    private float[] vertexArray = new float[]{
-//            // posición            // color
-//             0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f, 1.0f, // derecho abajo
-//            -0.5f,  0.5f, 0.0f,    0.0f, 1.0f, 0.0f, 1.0f, // izquierdo arriba
-//             0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f, 1.0f, // derecho arriba
-//            -0.5f, -0.5f, 0.0f,    1.0f, 1.0f, 0.0f, 1.0f  // izquierdo abajo
-//    };
-//
-//    int positionSize = 3;
-//    int colorSize = 4;
-//    int floatSizeBytes = 4;
-//    int vertexSizeBytes = (positionSize + colorSize) * floatSizeBytes;
+        // This line is critical for LWJGL's interoperation with GLFW's
+        // OpenGL context, or any context that is managed externally.
+        // LWJGL detects the context that is current in the current thread,
+        // creates the GLCapabilities instance and makes the OpenGL
+        // bindings available for use.
+        GL.createCapabilities(); // TODO: there are other ways target do this, but this is the simplest one.
+        this.program = program;
+        program.use();
+    }
+
+    public Renderer useProgram() {
+        program.use();
+        programInUse = true;
+        return this;
+    }
+
+    public Renderer unuseProgram() {
+        program.unuse();
+        programInUse = false;
+        return this;
+    }
+
+    /**
+     *
+     * @return the shader program used by this renderer.
+     */
+    public ShaderProgram program() {
+        return program;
+    }
 
     /**
      * Initializes the Renderer.
      * @throws IOException if the shaders cannot be read.
      */
-    public void init() throws IOException {
-        if (program != null)
-            return;
+    public void setView(View view) throws IOException {
+        this.view = view;
+        // Create a Vertex Shader, a Fragment Shader and attach them target the program.
+        try (var vertexShader = new VertexShader(vertProgramStr); var fragmentShader = new FragmentShader(fragProgramStr)) {
+            program.attachShader(vertexShader).attachShader(fragmentShader).link().use();
+        }
 
-        // Create Shader Program
-        program = new ShaderProgram();
-
-        var vertexShader = new VertexShader(Path.of("src/main/resources/Shaders/vertex/vertex.vert"));
-        var fragmentShader = new VertexShader(Path.of("src/main/resources/Shaders/fragments/fragment.frag"));
-        program.attachShader(vertexShader);
-        program.attachShader(fragmentShader);
-        program.link();
-
-        // Obtain uniform locations
-        uProjectionMatrix = program.createUniform("proyectionMatrix");
-        var worldMatrix = program.createUniform("worldMatrix");
-
+        modelUniform = program.createUniform("model");
+        projectionUniform = program.createUniform("projection");
+        viewUniform = program.createUniform("view");
     }
 
     /**
-     * Creates a {@link Renderer} instance.
-     * @param shaderProgram a {@link ShaderProgram} instance.
-     * @return a {@link Renderer} instance.
+     * Renders the current view target the viewer.
      */
-    public Renderer ofShader(ShaderProgram shaderProgram) {
-        return new Renderer(shaderProgram);
-    }
+    public void render() {
+        // Get the current view ->
+        // (Get projection matrix)
+        // & (Get camera -> Get view matrix)
+        // & (Get model ->
+        //      Get mesh ->
+        //          Get vao
+        //      & (Get position & Get rotation & Get scale -> Get model matrix)
+        // Render
+        //
 
-    /**
-     * Accepts a {@link Renderable renderable} and a {@link Viewer viewer}
-     * @param renderable a {@link Renderable Renderable} instance.
-     * @param x an int, the X position to render.
-     * @param y an int, the Y position to render.
-     * @param viewer a {@link Viewer Viewer} instance where to render.
-     */
-    public void render(Renderable renderable, int x, int y, Viewer viewer) {
-        glfwMakeContextCurrent(viewer.getContext());
-        glViewport(0, 0, viewer.getWidth(), viewer.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
-
+        view.camera().position(view.camera().position().plus(new Vector3(-.1f, 0f, 0f)));
+        //glViewport(0, 0, viewer.getWidth(), viewer.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
         clear();
 
-        program.use();
+        this.useProgram();
 
-        // Update projection Matrix
-        Matrix4f projectionMatrix = Transformation.getProjectionMatrix(FOV, viewer.getWidth(), viewer.getHeight(), Z_NEAR, Z_FAR);
-        program.setUniform("projectionMatrix", projectionMatrix);
+        var camera = view.camera();
+        /*projectionUniform.set(camera.projectionMatrix(), false); TODO
+        viewUniform.set(camera.viewMatrix(), false);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        // Draw Mesh
-        renderable.render();
-        program.unuse();
-    }
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    public void render(View view, Viewer viewer) {
-        glfwMakeContextCurrent(viewer.getContext());
-        glViewport(0, 0, viewer.getWidth(), viewer.getHeight()); //TODO: this scales and deforms the rendering, maybe with matrix transformations?
+        view.meshes().forEach(mesh -> program.draw(mesh));
+        view.models().forEach(model -> {
+            modelUniform.set(model.modelMatrix(), false);
+
+            model.meshes().forEach(mesh -> program.draw(mesh));
+        });*/
+
+        program.bind(vao);
+        vao.enableAttributes();
+
+        glDrawElements(GL_TRIANGLES, elements.length, GL_UNSIGNED_INT, 0);
+        vao.disableAttributes();
+
+        this.unuseProgram();
     }
 
     public void clear() {
@@ -128,22 +183,8 @@ public final class Renderer implements Runnable, AutoCloseable {
             program.close();
     }
 
-
     @Override
     public void run() {
-        //TODO
+        render();
     }
-
-//	public void renderMesh(Mesh mesh) {
-//		GL30.glBindVertexArray(mesh.getVAO());
-//		GL30.glEnableVertexAttribArray(0);
-//		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, mesh.getIBO());
-//		GL11.glDrawElements(GL11.GL_TRIANGLES, mesh.getIndices().length, GL11.GL_FLOAT, 0);
-//
-//		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
-//		GL30.glDisableVertexAttribArray(0);
-//		GL30.glBindVertexArray(0);
-//
-//	}
-
 }

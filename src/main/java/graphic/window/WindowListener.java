@@ -3,7 +3,7 @@ package graphic.window;
 /**
  * This class holds callbacks for the {@code Window} class.
  *
- * The methods in this class should be used to check when something changes in the {@code Window} class.
+ * The methods in this class should be used target check when something changes in the {@code Window} class.
  */
 public abstract class WindowListener {
     /**

@@ -4,4 +4,8 @@
 - Cada Vista puede ejecutarse en un hilo de ejecución.
 - Una Vista puede ser la composición de otras varias Vistas.
 - Existe una Vista principal.
-- 
+
+Como quiero que sea la aplicación:
+
+
+

@@ -10,7 +10,7 @@ public final class ResourceLoader {
     private ResourceLoader() {}
 
     public static String loadShader(Path shaderPath) throws IOException {
-        //TODO: check this is a shader, or at least try to.
+        //TODO: check this is a shader, or at least try target.
 //        if (shaderPath.getFileName().toString().equals("glsl"))
 
         return loadFile(shaderPath);

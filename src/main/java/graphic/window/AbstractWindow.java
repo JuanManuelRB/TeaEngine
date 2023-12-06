@@ -3,18 +3,19 @@ package graphic.window;
 import graphic.render.Renderer;
 import graphic.render.Viewer;
 import io.inputs.*;
+import juanmanuel.gealma.vga.vga3.Vector3;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import physics.dynamics.Position;
 import physics.dynamics.Size;
 
 import java.util.Map;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 
 
 /**
- * This class represents a basic window without logic, which the engine needs to run.
+ * This class represents a basic window without logic, which the engine needs target run.
  */
 public abstract class AbstractWindow implements Viewer, AutoCloseable {
     final WindowListener windowListener;
@@ -22,22 +23,21 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
     final KeyListener keyListener;
     final GamepadListener gamepadListener;
     final MonitorListener monitorListener;
-    final Renderer renderer;
+    Renderer renderer;
 
     static {
         // El callback puede cambiarse para que sea mas util que solo la salida estandar.
-        // The callback can be changed to another output.
+        // The callback can be changed target another output.
         GLFWErrorCallback.createPrint(System.err).set();
     }
 
     /**
      * Default constructor for the Window implementation.
-     * Sets the listeners to the window.
+     * Sets the listeners target the window.
      *
      * @param applicationListeners listeners of the application.
      */
     public AbstractWindow(ApplicationListeners applicationListeners) {
-
         // Check GLFW initialization
         if (!GLFW.glfwInit())
             throw new IllegalStateException("No ha sido posible inicializar GLFW");
@@ -56,10 +56,23 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
         return null;
     }
 
+    public synchronized void makeContextCurrent() {
+        GLFW.glfwMakeContextCurrent(getContext());
+    }
+
     /**
      * Creates the window and sets the context.
      */
     protected abstract void create();
+
+    /**
+     * Updates the window.
+     */
+    protected abstract void update();
+
+    public boolean shouldClose() {
+        return glfwWindowShouldClose(getContext());
+    }
 
     /**
      *
@@ -117,8 +130,8 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
      * 
      * @return The position of the window.
      */
-    public Position getPosition() {
-        return new Position(getPosX(), getPosY(), 0);
+    public Vector3 getPosition() {
+        return new Vector3(getPosX(), getPosY(), 0);
     }
 
     /**
@@ -139,7 +152,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
 
     public abstract void setSize(Size size);
 
-    public abstract void setPosition(Position position);
+    public abstract void setPosition(Vector3 position);
 
     public abstract void align(Alignment alignment);
 
@@ -149,6 +162,7 @@ public abstract class AbstractWindow implements Viewer, AutoCloseable {
             throw new IllegalStateException("The context is not set");
 
         glfwWindowShouldClose(getContext());
+        glfwFreeCallbacks(getContext());
         GLFW.glfwDestroyWindow(getContext());
         GLFW.glfwTerminate();
     }

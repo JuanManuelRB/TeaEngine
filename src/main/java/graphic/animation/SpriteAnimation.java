@@ -135,7 +135,7 @@ public record SpriteAnimation(List<Sprite> sprites, int animationSpeed) implemen
         /**
          * Activates or deactivates the iterator loop.
          *
-         * @param loop a boolean to active iteration loop.
+         * @param loop a boolean target active iteration loop.
          */
         public void loop(boolean loop) {
             looped = loop;

@@ -1,9 +1,9 @@
 package io.inputs;
 
-import java.util.TreeMap;
+import java.util.HashMap;
 
 public abstract class MonitorListener {
-    TreeMap<Integer, Long> monitors;
+    HashMap<Integer, Long> monitors;
     public final long primaryMonitor() {
         return monitor(1);
     }

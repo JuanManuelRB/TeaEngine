@@ -1,18 +1,18 @@
 package aplication;
 
-import graphic.scene.Scene;
+import graphic.scene.SceneObject;
 import graphic.window.Window;
 
 public abstract class Application implements Runnable {
-    private Scene<?> mainScene;
+    private SceneObject mainSceneObject;
     private Window window;
 
     public Application() {
         window = Window.builder().build();
     }
 
-    public Application setMainScene(Scene<?> mainScene) {
-        this.mainScene = mainScene;
+    public Application setMainScene(SceneObject mainSceneObject) {
+        this.mainSceneObject = mainSceneObject;
         return this;
     }
 

@@ -14,7 +14,7 @@ public final class VertexShader extends Shader {
         super(program, VERTEX);
     }
 
-//    public VertexShader(Path path) { // TODO: Implement when call to this constructor is not restricted to be the top statement. All my hopes are on you project Amber.
+//    public VertexShader(Path path) { // TODO: Implement when call target this constructor is not restricted target be the top statement. All my hopes are on you project Amber.
 //        try {
 //            this(Files.readAllLines(path).get(0));
 //        } catch (IOException e) {

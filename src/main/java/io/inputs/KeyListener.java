@@ -159,7 +159,7 @@ public abstract class KeyListener {
      * If the key is released returns RELEASED.
      * If the key is not pressed returns UNPRESSED.
      *
-     * @param key the keyboard key to evaluate.
+     * @param key the keyboard key target evaluate.
      * @return a KeyAction.
      */
     public abstract Optional<KeyAction> getKey(int key);

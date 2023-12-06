@@ -4,6 +4,8 @@ import io.inputs.GamepadListener;
 import io.inputs.KeyListener;
 import io.inputs.MonitorListener;
 import io.inputs.MouseListener;
+import juanmanuel.gealma.vga.vga3.Vector3;
+import physics.dynamics.Size;
 
 public interface WindowBuilder<T extends AbstractWindow> {
     /**
@@ -11,6 +13,10 @@ public interface WindowBuilder<T extends AbstractWindow> {
      * @return builded Window
      */
     T build();
+
+    WindowBuilder<Window> resizable(boolean resizable);
+
+    WindowBuilder<Window> updatesPerSecond(int updatesPerSecond);
 
     WindowBuilder<T> title(String title);
 
@@ -34,7 +40,7 @@ public interface WindowBuilder<T extends AbstractWindow> {
         return this.positionX(x).positionY(y);
     }
 
-    default WindowBuilder<T> withPosition(Position position) {
+    default WindowBuilder<T> withPosition(Vector3 position) {
         return this.positionX((int) position.x()).positionY((int) position.y());
     }
 
@@ -47,7 +53,5 @@ public interface WindowBuilder<T extends AbstractWindow> {
     WindowBuilder<T> mouseListener(MouseListener listener);
     WindowBuilder<T> keyListener(KeyListener listener);
     WindowBuilder<T> gamepadListener(GamepadListener listener);
-    WindowBuilder<Window> monitorListener(MonitorListener listener);
-
-
+    WindowBuilder<T> monitorListener(MonitorListener listener);
 }

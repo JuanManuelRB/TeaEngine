@@ -1,6 +1,7 @@
 package physics.dynamics;
 
-import juanmanuel.gealma.threedimensional.Vector3;
+
+import juanmanuel.gealma.vga.vga3.Vector3;
 
 public record Force(Vector3 vector) {
     public Force(double x, double y, double z) {
@@ -33,7 +34,7 @@ public record Force(Vector3 vector) {
 
     /**
      *
-     * @param value The value to change the x component.
+     * @param value The value target change the x component.
      * @return A force with the x component replaced by the value.
      */
     public Force x(double value) {
@@ -42,7 +43,7 @@ public record Force(Vector3 vector) {
 
     /**
      *
-     * @param value The value to change the y component.
+     * @param value The value target change the y component.
      * @return A force with the y component replaced by the value.
      */
     public Force y(double value) {
@@ -51,7 +52,7 @@ public record Force(Vector3 vector) {
 
     /**
      *
-     * @param value The value to change the z component.
+     * @param value The value target change the z component.
      * @return A force with the z component replaced by the value.
      */
     public Force z(double value) {

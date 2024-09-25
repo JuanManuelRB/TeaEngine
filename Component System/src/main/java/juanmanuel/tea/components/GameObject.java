@@ -1,0 +1,191 @@
+package juanmanuel.tea.components;
+
+import juanmanuel.tea.graph.ApplicationGraph;
+import juanmanuel.tea.graph.ApplicationVertex;
+
+import java.util.Objects;
+import java.util.concurrent.StructuredTaskScope;
+
+/**
+ * A GameObject is an object that can have children and parents, this allows for the creation of graphs of objects.
+ */
+public abstract class GameObject<GO extends GameObject<GO>> extends ApplicationVertex<GO> {
+
+    /**
+     * Called when a child is added to this GameObject.
+     * @param child The child that was added.
+     */
+    @Override
+    protected void onConnectChild(GO child) {
+    }
+
+    /**
+     * Called when a child is removed from this GameObject.
+     * @param child The child that was removed.
+     */
+    @Override
+    protected void onDisconnectChild(GO child) {
+    }
+
+    /**
+     * Called when a parent is added to this GameObject.
+     * @param parent The parent that was added.
+     */
+    @Override
+    protected void onConnectParent(GO parent) {
+    }
+
+    /**
+     * Called when a parent is removed from this GameObject.
+     * @param parent The parent that was removed.
+     */
+    @Override
+    protected void onDisconnectParent(GO parent) {
+    }
+
+    /**
+     * Called when this GameObject enters a graph.
+     */
+    @Override
+    protected void onEnterGraph(ApplicationGraph<GO> graph) {
+    }
+
+    /**
+     * Called when this GameObject leaves a graph.
+     */
+    @Override
+    protected void onLeaveGraph(ApplicationGraph<GO> graph) {
+    }
+
+    /**
+     * Called when a parent is subscribed to a computation.
+     * @param computation The computation to which the parent was subscribed.
+     * @param parent The parent that was subscribed.
+     * @param <Upr> The updater class.
+     * @param <Upd> The updated class.
+     * @param <SC> The computation class.
+     */
+    protected <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> void onParentSubscribe(SC computation, GO parent) {}
+
+    /**
+     * Called when a child is subscribed to a computation.
+     * @param computation The computation to which the child was subscribed.
+     * @param child The child that was subscribed.
+     * @param <Upr> The updater class.
+     * @param <Upd> The updated class.
+     * @param <SC> The computation class.
+     */
+    protected <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> void onChildSubscribe(SC computation, GO child) {}
+
+    /**
+     * Notifies the parents and children of this GameObject that this GameObject has been subscribed to a computation.
+     * This method is called when this GameObject is subscribed to a computation.
+     * @param computation The computation to which this GameObject has been subscribed.
+     * @param <Upr> The updater class.
+     * @param <Upd> The updated class.
+     * @param <SC> The computation class.
+     * @throws RuntimeException If the computation throws an exception.
+     */
+    @SuppressWarnings("unchecked")
+    protected <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> void onSubscribe(SC computation) throws RuntimeException {
+
+        // Notify parents and children of the subscription
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            for (var parent : parents()) {
+                scope.fork(() -> {
+                    parent.onChildSubscribe(computation, (GO) this);
+                    return null;
+                });
+            }
+            for (var child : children()) {
+                scope.fork(() -> {
+                    child.onParentSubscribe(computation, (GO) this);
+                    return null;
+                });
+            }
+            scope.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns whether this GameObject is updated in a computation.
+     * @param computation
+     * @return
+     * @param <Upr>
+     * @param <Upd>
+     * @param <SC>
+     */
+    public <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedInGraphOf(SC computation) {
+        Objects.requireNonNull(computation);
+        try {
+            return computation.updatedSet().contains((GO) this);
+        } catch (ClassCastException _) {
+            return false;
+        }
+    }
+
+    public <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedBy(SC computation) {
+        Objects.requireNonNull(computation);
+        return this.equals(computation.updated());
+    }
+
+    /**
+     * Returns whether this GameObject is updated after a computation.
+     * @param computation
+     * @return
+     * @param <Upr>
+     * @param <Upd>
+     * @param <SC>
+     */
+    public <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedAfter(SC computation) {
+        Objects.requireNonNull(computation);
+        if (!computation.updatedClass().isAssignableFrom(this.getClass()))
+            return false;
+
+        return computation.findSuccessorComputation(computation.updatedClass().cast(this)).isPresent();
+    }
+
+    /**
+     * Returns whether this GameObject is updated before a computation.
+     * @param computation
+     * @return
+     * @param <Upr>
+     * @param <Upd>
+     * @param <SC>
+     */
+    public <Upr extends Updater<Upr, Upd, SC>,
+            Upd extends Updated,
+            SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedBefore(SC computation) {
+        Objects.requireNonNull(computation);
+        if (!computation.updatedClass().isAssignableFrom(this.getClass()))
+            return false;
+
+        return computation.findPredecessorComputation(computation.updatedClass().cast(this)).isPresent();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

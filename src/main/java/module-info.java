@@ -1,4 +1,5 @@
-module teaengine {
+module tea {
+    requires java.management;
     requires org.lwjgl;
     requires org.lwjgl.glfw;
     requires org.lwjgl.opengl;
@@ -6,6 +7,7 @@ module teaengine {
     requires gealma;
 
     requires transitive kotlin.stdlib;
+
     requires org.lwjgl.stb;
-    requires org.jgrapht.core;
+    requires tea_engine.core;
 }

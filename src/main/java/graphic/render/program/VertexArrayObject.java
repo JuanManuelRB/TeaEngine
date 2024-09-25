@@ -170,7 +170,7 @@ public final class VertexArrayObject implements AutoCloseable {
          *                   directly as fixed-point values (GL_FALSE) when they are accessed.
          * @param stride     Specifies the byte offset between consecutive generic vertex attributes. If stride is 0, the
          *                   generic vertex attributes are understood target be tightly packed in the array.
-         * @param offset     Specifies an offset of the first component of the first generic vertex attribute in the array
+         * @param offset     Specifies an offset of the head component of the head generic vertex attribute in the array
          *                   in the data store of the buffer currently bound target the GL_ARRAY_BUFFER target. The initial
          *                   value is 0.
          * @param buffer     The buffer to be used.
@@ -213,7 +213,7 @@ public final class VertexArrayObject implements AutoCloseable {
          *                   directly as fixed-point values (GL_FALSE) when they are accessed.
          * @param stride     Specifies the byte offset between consecutive generic vertex attributes. If stride is 0, the
          *                   generic vertex attributes are understood target be tightly packed in the array.
-         * @param offset     Specifies an offset of the first component of the first generic vertex attribute in the array
+         * @param offset     Specifies an offset of the head component of the head generic vertex attribute in the array
          *                   in the data store of the buffer currently bound target the GL_ARRAY_BUFFER target. The initial
          *                   value is 0.
          */

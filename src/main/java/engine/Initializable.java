@@ -3,7 +3,7 @@ package engine;
 @FunctionalInterface
 public interface Initializable {
     /**
-     * Initializes the logic. This method is called once before the first step.
+     * Initializes the logic. This method is called once before the head step.
      *
      * @throws InitializationException when the logic can't be initialized.
      */

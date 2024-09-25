@@ -1,5 +1,5 @@
-package aplication.objects;
-
-public interface Positionable {
-    Position position();
-}
+//package aplication.objects;
+//
+//public interface Positionable {
+//    Position position();
+//}

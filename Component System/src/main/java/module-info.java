@@ -6,7 +6,6 @@ module tea_engine.core {
     exports juanmanuel.tea.graph.policy;
     exports juanmanuel.tea.graph.validation;
     exports juanmanuel.tea.graph.callbacks;
-
-    exports juanmanuel.tea.utils;
     exports juanmanuel.tea.graph.operation_failures;
+    exports juanmanuel.tea.utils;
 }

@@ -258,7 +258,9 @@ public abstract class StructuredComputation <
         }
     }
 
-    interface OperationReturn extends FailureResults {}
+    // TODO: Create proper failure types for StructuredComputation instead of reusing the ones from the graph package
+    // RejectedByGraph, RejectedByVertex, ComputationNotPresent, ComputationAlreadyPresent, SelfReference, ComputationNotConnected, ComputationAlreadyConnected
+    public sealed interface SetAfterFailure extends FailureResults permits FailureResults.EdgeAlreadyExists, FailureResults.EdgeNotPresent, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexAlreadyPresent, FailureResults.VertexNotPresent {}
 
     /// This method is used to set a computation as a child of this computation.
     ///
@@ -276,7 +278,7 @@ public abstract class StructuredComputation <
     /// @param updated The updated object to add as a child of this computation.
     /// @return A Result object containing the computation that was added as a child, or a failure if the computation was not added.
     /// @throws NullPointerException If the updated object is null or the updater is null.
-    public Result<Self, OperationReturn> setAfter(Upd updated, Upr updater) throws NullPointerException {
+    public Result<Self, SetAfterFailure> setAfter(Upd updated, Upr updater) throws NullPointerException {
         Objects.requireNonNull(updated);
         Objects.requireNonNull(updater);
 
@@ -285,31 +287,33 @@ public abstract class StructuredComputation <
 
         return switch (addChild(sComp, graph)) {
             case Result.Failure<Self, ChildAdditionFailure>(var f) -> switch (f) {
-                case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> edgeAlreadyExists;
-                case FailureResults.GraphCycleDetected graphCycleDetected -> graphCycleDetected;
-                case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> rejectedByGraphPolicy;
-                case FailureResults.RejectedByGraphValidation rejectedByGraphValidation -> rejectedByGraphValidation;
-                case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> rejectedByVertexPolicy;
-                case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> rejectedByVertexValidation;
-                case FailureResults.SelfReference selfReference -> selfReference;
-                case FailureResults.VertexAlreadyPresent vertexAlreadyPresent -> vertexAlreadyPresent;
-                case FailureResults.VertexNotPresent vertexNotPresent -> vertexNotPresent;
+                case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> Result.fail(rejectedByGraphPolicy);
+                case FailureResults.RejectedByGraphValidation rejectedByGraphValidation -> Result.fail(rejectedByGraphValidation);
+                case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> Result.fail(rejectedByVertexPolicy);
+                case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> Result.fail(rejectedByVertexValidation);
+                case FailureResults.VertexNotPresent vertexNotPresent -> Result.fail(vertexNotPresent);
+                case FailureResults.VertexAlreadyPresent vertexAlreadyPresent -> Result.fail(vertexAlreadyPresent);
+                case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> Result.fail(edgeAlreadyExists);
+                case FailureResults.SelfReference selfReference -> Result.fail(selfReference);
+                case FailureResults.GraphCycleDetected graphCycleDetected -> Result.fail(graphCycleDetected);
             };
             case Result.Success<Self, ChildAdditionFailure> _ -> switch (sComp.disconnectParents(graph, p -> p != this)) {
                 case Result.Failure<Self, Set<ParentDisconnectionFailure>>(var f) -> {
                     for (var failure : f) {
-                        return switch (failure) {
-                            case FailureResults.EdgeNotPresent edgeNotPresent -> edgeNotPresent;
-                            case FailureResults.GraphCycleDetected graphCycleDetected -> graphCycleDetected;
-                            case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> rejectedByGraphPolicy;
-                            case FailureResults.RejectedByGraphValidation rejectedByGraphValidation -> rejectedByGraphValidation;
-                            case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> rejectedByVertexPolicy;
-                            case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> rejectedByVertexValidation;
-                            case FailureResults.VertexNotPresent vertexNotPresent -> vertexNotPresent;
+                        yield switch (failure) {
+                            case FailureResults.EdgeNotPresent edgeNotPresent -> Result.fail(edgeNotPresent);
+                            case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> Result.fail(rejectedByGraphPolicy);
+                            case FailureResults.RejectedByGraphValidation rejectedByGraphValidation -> Result.fail(rejectedByGraphValidation);
+                            case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> Result.fail(rejectedByVertexPolicy);
+                            case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> Result.fail(rejectedByVertexValidation);
+                            case FailureResults.VertexNotPresent vertexNotPresent -> Result.fail(vertexNotPresent);
+                            case FailureResults.SelfReference selfReference -> Result.fail(selfReference);
                         };
                     }
 
-                }; // TODO: create and add failure Type
+                    throw new IllegalStateException("Unreachable code");
+
+                }
                 case Result.Success<Self, ?>(var v) -> Result.success(v);
             };
         };

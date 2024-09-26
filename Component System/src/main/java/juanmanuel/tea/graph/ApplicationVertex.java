@@ -418,74 +418,6 @@ public abstract non-sealed class ApplicationVertex<Self extends ApplicationVerte
     }
 
     /**
-     * Realizes the validation of the addition of a child to this vertex.
-     * First checks the policy for the given child.
-     * Then checks the validation predicates for the child.
-     * @param child The child to add.
-     * @return true if the child can be added, false otherwise.
-     */
-    boolean validateConnectChild(Self child, ApplicationGraph<? super Self> graph) {
-        return switch (policiesManager.stateOf(CONNECT_CHILD_POLICY, child)) {
-            case REJECT, UNSET -> false;
-            case ACCEPT -> switch (validationsManager.validateOperation(CONNECT_CHILD_VALIDATION, child)) {
-                case Success<Void, ?> _ -> true;
-                case Result.Failure<?, Set<String>> _ -> false;
-            };
-        };
-    }
-
-    /**
-     * Realizes the validation of the addition of a parent to this vertex.
-     * First checks the policy for the given parent.
-     * Then checks the validation predicates for the parent.
-     * @param parent The parent to add.
-     * @return true if the parent can be added, false otherwise.
-     */
-    boolean validateConnectParent(Self parent, ApplicationGraph<? super Self> graph) {
-        return switch (policiesManager.stateOf(CONNECT_PARENT_POLICY, parent)) {
-            case REJECT, UNSET -> false;
-            case ACCEPT -> switch (validationsManager.validateOperation(CONNECT_PARENT_VALIDATION, parent)) {
-                case Success<Void, Set<String>> _ -> true;
-                case Result.Failure<Void, Set<String>> _ -> false;
-            };
-        };
-    }
-
-    /**
-     * Realizes the validation of the removal of a child from this vertex.
-     * First checks the policy for the given child.
-     * Then checks the validation predicates for the child.
-     * @param child The child to remove.
-     * @return true if the child can be removed, false otherwise.
-     */
-    boolean validateDisconnectChild(Self child, ApplicationGraph<? super Self> graph) {
-        return switch (policiesManager.stateOf(DISCONNECT_CHILD_POLICY, child)) {
-            case REJECT, UNSET -> false;
-            case ACCEPT -> switch (validationsManager.validateOperation(DISCONNECT_CHILD_VALIDATION, child)) {
-                case Success<Void, Set<String>> _ -> true;
-                case Result.Failure<Void, Set<String>> _ -> false;
-            };
-        };
-    }
-
-    /**
-     * Realizes the validation of the removal of a parent from this vertex.
-     * First checks the policy for the given parent.
-     * Then checks the validation predicates for the parent.
-     * @param parent The parent to remove.
-     * @return true if the parent can be removed, false otherwise.
-     */
-    boolean validateDisconnectParent(Self parent, ApplicationGraph<? super Self> graph) {
-        return switch (policiesManager.stateOf(DISCONNECT_PARENT_POLICY, parent)) {
-            case REJECT, UNSET -> false;
-            case ACCEPT -> switch (validationsManager.validateOperation(DISCONNECT_PARENT_VALIDATION, parent)) {
-                case Success<Void, Set<String>> _ -> true;
-                case Result.Failure<Void, Set<String>> _ -> false;
-            };
-        };
-    }
-
-    /**
      * Failure result of shouldConnectChild.
      */
     public sealed interface ShouldConnectChildFailure extends ShouldConnectFailure permits
@@ -735,15 +667,13 @@ public abstract non-sealed class ApplicationVertex<Self extends ApplicationVerte
 
     public sealed interface ShouldRemoveChildFailure extends ShouldRemoveFailure permits EdgeNotPresent, RejectedByGraphPolicy, RejectedByGraphValidation, RejectedByVertexPolicy, RejectedByVertexValidation, SelfReference, VertexNotPresent {}
 
-    /**
-     * Determines if a child node could be warframe removed from the current node.
-     * If the child has no graph, the removal is allowed. A result of {@link Success} will be returned.
-     * Checks the policies of the current node and the child node to determine if the child can be removed.
-     *
-     * @param child The child node to be removed.
-     * @return A {@link Result} indicating whether the child should be removed, and if not, the reason for rejection.
-     * @throws NullPointerException if the child is null.
-     */
+    /// Determines if a child node could be warframe removed from the current node.
+    /// If the child has no graph, the removal is allowed. A result of [Success] will be returned.
+    /// Checks the policies of the current node and the child node to determine if the child can be removed.
+    ///
+    /// @param child The child node to be removed.
+    /// @return A [Result] indicating whether the child should be removed, and if not, the reason for rejection.
+    /// @throws NullPointerException if the child is null.
     public final Result<Void, ShouldRemoveChildFailure> shouldRemoveChild(Self child, ApplicationGraph<? super Self> graph) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);

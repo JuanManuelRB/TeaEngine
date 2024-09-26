@@ -1,5 +1,6 @@
 package juanmanuel.tea.graph.operation_failures;
 
+import juanmanuel.tea.components.StructuredComputation;
 import juanmanuel.tea.graph.ApplicationGraph;
 import juanmanuel.tea.graph.ApplicationVertex;
 
@@ -35,7 +36,8 @@ public interface FailureResults {
             ApplicationVertex.ParentDisconnectionFailure,
             ApplicationVertex.ChildRemovalFailure,
             ApplicationVertex.ParentRemovalFailure,
-            ApplicationVertex.RemoveFailure
+            ApplicationVertex.RemoveFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
     /**
@@ -69,7 +71,8 @@ public interface FailureResults {
             ApplicationVertex.ParentDisconnectionFailure,
             ApplicationVertex.ChildRemovalFailure,
             ApplicationVertex.ParentRemovalFailure,
-            ApplicationVertex.RemoveFailure
+            ApplicationVertex.RemoveFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
     /**
@@ -103,7 +106,8 @@ public interface FailureResults {
             ApplicationVertex.ParentDisconnectionFailure,
             ApplicationVertex.ChildRemovalFailure,
             ApplicationVertex.ParentRemovalFailure,
-            ApplicationVertex.RemoveFailure
+            ApplicationVertex.RemoveFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
     /**
@@ -137,7 +141,8 @@ public interface FailureResults {
             ApplicationVertex.ParentDisconnectionFailure,
             ApplicationVertex.ChildRemovalFailure,
             ApplicationVertex.ParentRemovalFailure,
-            ApplicationVertex.RemoveFailure
+            ApplicationVertex.RemoveFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
     /**
@@ -151,7 +156,8 @@ public interface FailureResults {
             ApplicationVertex.ChildAdditionFailure,
             ApplicationVertex.ParentAdditionFailure,
             ApplicationGraph.ShouldAddVertexFailure,
-            ApplicationGraph.VertexAdditionFailure
+            ApplicationGraph.VertexAdditionFailure,
+            StructuredComputation.SetAfterFailure
 //            ApplicationVertex.ShouldAddToGraphFailure,
 //            ApplicationVertex.AdditionToGraphFailure
     {}
@@ -172,7 +178,8 @@ public interface FailureResults {
             ApplicationVertex.ChildAdditionFailure,
             ApplicationVertex.ParentAdditionFailure,
             ApplicationVertex.ChildRemovalFailure,
-            ApplicationVertex.ParentRemovalFailure {}
+            ApplicationVertex.ParentRemovalFailure,
+            StructuredComputation.SetAfterFailure {}
 
     record EdgeAlreadyExists(String message) implements
             ApplicationVertex.ParentAdditionFailure,
@@ -184,7 +191,8 @@ public interface FailureResults {
             ApplicationVertex.ShouldConnectParentFailure,
             ApplicationVertex.ShouldConnectChildFailure,
             ApplicationGraph.ShouldAddEdgeFailure,
-            ApplicationGraph.EdgeAdditionFailure
+            ApplicationGraph.EdgeAdditionFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
     record EdgeNotPresent(String message) implements
@@ -197,7 +205,8 @@ public interface FailureResults {
             ApplicationVertex.ChildRemovalFailure,
             ApplicationVertex.ParentRemovalFailure,
             ApplicationGraph.ShouldRemoveEdgeFailure,
-            ApplicationGraph.EdgeRemovalFailure
+            ApplicationGraph.EdgeRemovalFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
 
@@ -226,7 +235,8 @@ public interface FailureResults {
             ApplicationVertex.ParentAdditionFailure,
             ApplicationVertex.ChildRemovalFailure,
             ApplicationVertex.ParentRemovalFailure,
-            ApplicationVertex.RemoveFailure
+            ApplicationVertex.RemoveFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
     record GraphCycleDetected(String message) implements
@@ -239,7 +249,8 @@ public interface FailureResults {
             ApplicationVertex.ChildConnectionFailure,
             ApplicationVertex.ParentConnectionFailure,
             ApplicationVertex.ChildAdditionFailure,
-            ApplicationVertex.ParentAdditionFailure
+            ApplicationVertex.ParentAdditionFailure,
+            StructuredComputation.SetAfterFailure
     {}
 
 }

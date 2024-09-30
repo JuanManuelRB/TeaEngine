@@ -1,7 +1,7 @@
 package juanmanuel.tea.graph;
 
-public final class DummyGraph extends ApplicationGraph<DummyVertex> {
+public final class DummyGraph extends Graph<DummyVertex, ApplicationEdge> {
     public DummyGraph() {
-        super((Class<? extends ApplicationEdge<DummyVertex>>) new ApplicationEdge<DummyVertex>().getClass());
+        super(ApplicationEdge.class);
     }
 }

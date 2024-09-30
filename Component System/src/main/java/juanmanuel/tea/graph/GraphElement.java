@@ -1,4 +1,4 @@
 package juanmanuel.tea.graph;
 
-public sealed interface GraphElement permits ApplicationVertex, ApplicationGraph, ApplicationEdge {
+public sealed interface GraphElement permits ApplicationEdge, Graph, Vertex {
 }

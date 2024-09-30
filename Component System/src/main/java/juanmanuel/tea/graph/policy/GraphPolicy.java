@@ -1,6 +1,6 @@
 package juanmanuel.tea.graph.policy;
 
-import juanmanuel.tea.graph.ApplicationVertex;
+import juanmanuel.tea.graph.Vertex;
 
 /**
  * A policy that can be applied on a graph.
@@ -18,7 +18,7 @@ public sealed interface GraphPolicy extends Policy {
         QUERY_EDGES_POLICY
     }
 
-    enum VertexModificationGraphPolicy implements GraphPolicy, UnaryPolicy<ApplicationVertex<?>> {
+    enum VertexModificationGraphPolicy implements GraphPolicy, UnaryPolicy<Vertex<?>> {
         /**
          * Whether the graph could be added.
          */
@@ -30,12 +30,12 @@ public sealed interface GraphPolicy extends Policy {
         REMOVE_VERTEX_POLICY
     }
 
-    enum EdgeModificationGraphPolicy implements GraphPolicy, BinaryPolicy<ApplicationVertex<?>, ApplicationVertex<?>> {
+    enum EdgeModificationGraphPolicy implements GraphPolicy, BinaryPolicy<Vertex<?>, Vertex<?>> {
         CREATE_EDGE_POLICY,
         REMOVE_EDGE_POLICY
     }
 
-    enum VertexEffectGraphPolicy implements GraphPolicy, UnaryPolicy<ApplicationVertex<?>> {
+    enum VertexEffectGraphPolicy implements GraphPolicy, UnaryPolicy<Vertex<?>> {
         /**
          * Whether onEnterGraph should be executed when the vertex enters a graph.
          */
@@ -47,7 +47,7 @@ public sealed interface GraphPolicy extends Policy {
         ON_LEAVE_GRAPH_POLICY,
     }
 
-    enum EdgeEffectGraphPolicy implements GraphPolicy, BinaryPolicy<ApplicationVertex<?>, ApplicationVertex<?>> {
+    enum EdgeEffectGraphPolicy implements GraphPolicy, BinaryPolicy<Vertex<?>, Vertex<?>> {
         /**
          * Whether onConnect should be executed when an edge is connected.
          */
@@ -58,5 +58,4 @@ public sealed interface GraphPolicy extends Policy {
          */
         ON_REMOVE_EDGE_POLICY
     }
-
 }

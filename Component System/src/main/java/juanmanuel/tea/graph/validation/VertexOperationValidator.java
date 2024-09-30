@@ -1,7 +1,7 @@
 package juanmanuel.tea.graph.validation;
 
-import juanmanuel.tea.graph.ApplicationGraph;
-import juanmanuel.tea.graph.ApplicationVertex;
+import juanmanuel.tea.graph.Graph;
+import juanmanuel.tea.graph.Vertex;
 import juanmanuel.tea.utils.Result;
 
 import java.util.*;
@@ -20,14 +20,12 @@ import java.util.function.Predicate;
  * If the user wants a validation to be permanently stored, they must keep a reference to the predicate elsewhere.
  * @param <V> The type of the vertex over which the validations are performed.
  */
-public final class VertexOperationValidator<V extends ApplicationVertex<V>> implements OperationValidator {
-    private final EnumMap<VerticesOperationValidation, Set<ResultFunction<V>>> vertexValidations
+public final class VertexOperationValidator<V extends Vertex<V>> implements OperationValidator {
+    private final EnumMap<VerticesOperationValidation, Set<Function<V, Result<Void, String>>>> vertexValidations
             = new EnumMap<>(VerticesOperationValidation.class);
-    private final EnumMap<GraphsOperationValidation, Set<ResultFunction<ApplicationGraph<? super V>>>> graphValidations
+    private final EnumMap<GraphsOperationValidation, Set<Function<Graph<? super V, ?>, Result<Void, String>>>> graphValidations
             = new EnumMap<>(GraphsOperationValidation.class);
 
-    @FunctionalInterface
-    public interface ResultFunction<T> extends Function<T, Result<Void, String>> {}
 
     /**
      * Possible operations to validate over a vertex.
@@ -75,7 +73,7 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
      * @param validation The operation to validate.
      * @param predicate The predicate that must be satisfied for the validation to pass.
      */
-    public void addOperationValidation(VerticesOperationValidation validation, ResultFunction<V> predicate) {
+    public void addOperationValidation(VerticesOperationValidation validation, Function<V, Result<Void, String>> predicate) {
         Objects.requireNonNull(validation, "validation cannot be null");
         Objects.requireNonNull(predicate, "predicate cannot be null");
 
@@ -88,7 +86,7 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
      * @param validation The operation to validate.
      * @param predicate The predicate that must be satisfied for the validation to pass.
      */
-    public void addOperationValidation(GraphsOperationValidation validation, ResultFunction<ApplicationGraph<? super V>> predicate) {
+    public void addOperationValidation(GraphsOperationValidation validation, Function<Graph<? super V, ?>, Result<Void, String>> predicate) {
         Objects.requireNonNull(validation, "validation cannot be null");
         Objects.requireNonNull(predicate, "predicate cannot be null");
 
@@ -107,7 +105,7 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
 
         var set = vertexValidations.get(validation);
         if (set == null) return false;
-        return set.remove(predicate);
+        return set.remove(predicate); // FIXME
     }
 
     /**
@@ -116,12 +114,12 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
      * @param predicate The predicate to remove.
      * @return true if the validation was removed, false otherwise.
      */
-    public boolean removeOperationValidation(GraphsOperationValidation validation, Predicate<ApplicationGraph<V>> predicate) {
+    public boolean removeOperationValidation(GraphsOperationValidation validation, Predicate<Graph<V, ?>> predicate) {
         Objects.requireNonNull(validation, "validation cannot be null");
 
         var set = graphValidations.get(validation);
         if (set == null) return false;
-        return set.remove(predicate);
+        return set.remove(predicate); // FIXME
     }
 
     /**
@@ -158,7 +156,7 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
      * @return a result that contains a set of the validations failures messages if the operation is invalid, or null if the
      * operation is valid.
      */
-    public Result<Void, Set<String>> validateOperation(GraphsOperationValidation validation, ApplicationGraph<? super V> graph) {
+    public Result<Void, Set<String>> validateOperation(GraphsOperationValidation validation, Graph<? super V, ?> graph) {
         var set = graphValidations.get(validation);
         if (set == null)
             return Result.success();
@@ -183,7 +181,7 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
      * @param validation The operation to get the validations for.
      * @return a set of predicates that must be satisfied for the operation to be valid.
      */
-    public Set<ResultFunction<V>> getValidationsForOperation(VerticesOperationValidation validation) {
+    public Set<Function<V, Result<Void, String>>> getValidationsForOperation(VerticesOperationValidation validation) {
         var set = vertexValidations.get(validation);
         if (set == null)
             return new HashSet<>();
@@ -195,7 +193,7 @@ public final class VertexOperationValidator<V extends ApplicationVertex<V>> impl
      * @param validation The operation to get the validations for.
      * @return a set of predicates that must be satisfied for the operation to be valid.
      */
-    public Set<ResultFunction<ApplicationGraph<? super V>>> getValidationsForOperation(GraphsOperationValidation validation) {
+    public Set<Function<Graph<? super V, ?>, Result<Void, String>>> getValidationsForOperation(GraphsOperationValidation validation) {
         var set = graphValidations.get(validation);
         if (set == null)
             return new HashSet<>();

@@ -4,13 +4,13 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 
 public non-sealed class ApplicationEdge extends DefaultWeightedEdge implements GraphElement {
     @Override
-    public ApplicationVertex<?> getSource() {
-        return (ApplicationVertex<?>) super.getSource();
+    public Vertex<?> getSource() {
+        return (Vertex<?>) super.getSource();
     }
 
     @Override
-    public ApplicationVertex<?> getTarget() {
-        return (ApplicationVertex<?>) super.getTarget();
+    public Vertex<?> getTarget() {
+        return (Vertex<?>) super.getTarget();
     }
 
     @Override
@@ -20,6 +20,6 @@ public non-sealed class ApplicationEdge extends DefaultWeightedEdge implements G
 
     @Override
     public String toString() {
-        return StringTemplate.STR."\{getSource()} --\{getWeight()}--> \{getTarget()}";
+        return String.format("%s --%f--> %s", getSource(), getWeight(), getTarget());
     }
 }

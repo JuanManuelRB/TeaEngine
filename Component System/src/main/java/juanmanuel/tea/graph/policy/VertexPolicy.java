@@ -1,7 +1,7 @@
 package juanmanuel.tea.graph.policy;
 
-import juanmanuel.tea.graph.ApplicationGraph;
-import juanmanuel.tea.graph.ApplicationVertex;
+import juanmanuel.tea.graph.Graph;
+import juanmanuel.tea.graph.Vertex;
 
 /**
  * Policies of a vertex.
@@ -32,7 +32,7 @@ public sealed interface VertexPolicy extends Policy {
     /**
      * Effect policies control the behavior of some side effects produced by an operation.
      */
-    enum EffectVertexPolicy implements VertexPolicy, UnaryPolicy<ApplicationVertex<?>> {
+    enum EffectVertexPolicy implements VertexPolicy, UnaryPolicy<Vertex<?>> {
         /**
          * Whether onConnectChild should be executed when a child is connected.
          */
@@ -57,7 +57,7 @@ public sealed interface VertexPolicy extends Policy {
     /**
      * Modification policies control the behavior of some operations.
      */
-    enum EdgeModificationVertexPolicy implements VertexPolicy, UnaryPolicy<ApplicationVertex<?>> {
+    enum EdgeModificationVertexPolicy implements VertexPolicy, UnaryPolicy<Vertex<?>> {
         /**
          * Whether a child could be connected.
          */
@@ -79,7 +79,7 @@ public sealed interface VertexPolicy extends Policy {
         DISCONNECT_PARENT_POLICY
     }
 
-    enum GraphModificationVertexPolicy implements VertexPolicy, UnaryPolicy<ApplicationGraph<?>> {
+    enum GraphModificationVertexPolicy implements VertexPolicy, UnaryPolicy<Graph<?, ?>> {
         /**
          * Whether the vertex could be added to a graph.
          */

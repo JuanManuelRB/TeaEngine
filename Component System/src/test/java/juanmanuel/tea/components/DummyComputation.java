@@ -1,16 +1,15 @@
 package juanmanuel.tea.components;
 
 import juanmanuel.tea.graph.ApplicationEdge;
-import juanmanuel.tea.graph.ApplicationGraph;
+import juanmanuel.tea.graph.Graph;
 
 import java.util.function.Supplier;
 
 public class DummyComputation extends StructuredComputation<DummyUpdater, DummyUpdated, DummyComputation> {
-    private static final ApplicationGraph<DummyComputation> graph 
-            = new ApplicationGraph<>((Class<? extends ApplicationEdge<DummyComputation>>) new ApplicationEdge<DummyComputation>().getClass());
+    private static final Graph<DummyComputation, ApplicationEdge> graph = new Graph<>(ApplicationEdge.class);
     private final String name;
     public DummyComputation(String name, Class<DummyUpdater> updaterClass, DummyUpdated updated) {
-        super(updaterClass, updated, graph);
+        super(updaterClass, updated);
         this.name = name;
     }
 
@@ -49,6 +48,6 @@ public class DummyComputation extends StructuredComputation<DummyUpdater, DummyU
 
     @Override
     public String toString() {
-        return STR."DummyComputation{name=\{name}}";
+        return "DummyComputation{name='" + name + "'}";
     }
 }

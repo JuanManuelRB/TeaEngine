@@ -1,6 +1,6 @@
 package juanmanuel.tea.graph;
 
-public class DummyVertex extends ApplicationVertex<DummyVertex> {
+public class DummyVertex extends Vertex<DummyVertex> {
     private final String name;
     public DummyVertex(String name) {
         super();
@@ -14,6 +14,6 @@ public class DummyVertex extends ApplicationVertex<DummyVertex> {
 
     @Override
     public String toString() {
-        return STR."DummyVertex{name='\{name}\{'\''}\{'}'}";
+        return "DummyVertex{name='" + name + '\'' + '}';
     }
 }

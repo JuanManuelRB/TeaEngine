@@ -2,7 +2,7 @@ package juanmanuel.tea.graph.policy;
 
 import juanmanuel.tea.graph.ApplicationEdge;
 
-public sealed interface EdgePolicy extends Policy.UnaryPolicy<ApplicationEdge<?>> {
+public sealed interface EdgePolicy extends Policy.UnaryPolicy<ApplicationEdge> {
     enum QueryEdgePolicy implements EdgePolicy {
         QUERY_SOURCE_POLICY,
         QUERY_TARGET_POLICY,

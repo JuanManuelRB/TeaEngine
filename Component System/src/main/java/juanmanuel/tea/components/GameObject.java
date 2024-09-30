@@ -1,61 +1,60 @@
 package juanmanuel.tea.components;
 
-import juanmanuel.tea.graph.ApplicationGraph;
-import juanmanuel.tea.graph.ApplicationVertex;
+import juanmanuel.tea.graph.ApplicationEdge;
+import juanmanuel.tea.graph.Graph;
 
 import java.util.Objects;
-import java.util.concurrent.StructuredTaskScope;
 
 /**
  * A GameObject is an object that can have children and parents, this allows for the creation of graphs of objects.
  */
-public abstract class GameObject<GO extends GameObject<GO>> extends ApplicationVertex<GO> {
+public abstract class GameObject<GO extends GameObject<GO>> extends juanmanuel.tea.graph.Vertex<GO> {
 
-    /**
-     * Called when a child is added to this GameObject.
-     * @param child The child that was added.
-     */
-    @Override
-    protected void onConnectChild(GO child) {
-    }
-
-    /**
-     * Called when a child is removed from this GameObject.
-     * @param child The child that was removed.
-     */
-    @Override
-    protected void onDisconnectChild(GO child) {
-    }
-
-    /**
-     * Called when a parent is added to this GameObject.
-     * @param parent The parent that was added.
-     */
-    @Override
-    protected void onConnectParent(GO parent) {
-    }
-
-    /**
-     * Called when a parent is removed from this GameObject.
-     * @param parent The parent that was removed.
-     */
-    @Override
-    protected void onDisconnectParent(GO parent) {
-    }
-
-    /**
-     * Called when this GameObject enters a graph.
-     */
-    @Override
-    protected void onEnterGraph(ApplicationGraph<GO> graph) {
-    }
-
-    /**
-     * Called when this GameObject leaves a graph.
-     */
-    @Override
-    protected void onLeaveGraph(ApplicationGraph<GO> graph) {
-    }
+//    /**
+//     * Called when a child is added to this GameObject.
+//     * @param child The child that was added.
+//     */
+//    @Override
+//    protected void onConnectChild(GO child) {
+//    }
+//
+//    /**
+//     * Called when a child is removed from this GameObject.
+//     * @param child The child that was removed.
+//     */
+//    @Override
+//    protected void onDisconnectChild(GO child) {
+//    }
+//
+//    /**
+//     * Called when a parent is added to this GameObject.
+//     * @param parent The parent that was added.
+//     */
+//    @Override
+//    protected void onConnectParent(GO parent) {
+//    }
+//
+//    /**
+//     * Called when a parent is removed from this GameObject.
+//     * @param parent The parent that was removed.
+//     */
+//    @Override
+//    protected void onDisconnectParent(GO parent) {
+//    }
+//
+//    /**
+//     * Called when this GameObject enters a graph.
+//     */
+//    @Override
+//    protected void onEnterGraph(ApplicationGraph<GO> graph) {
+//    }
+//
+//    /**
+//     * Called when this GameObject leaves a graph.
+//     */
+//    @Override
+//    protected void onLeaveGraph(ApplicationGraph<GO> graph) {
+//    }
 
     /**
      * Called when a parent is subscribed to a computation.
@@ -93,31 +92,31 @@ public abstract class GameObject<GO extends GameObject<GO>> extends ApplicationV
     @SuppressWarnings("unchecked")
     protected <Upr extends Updater<Upr, Upd, SC>,
             Upd extends Updated,
-            SC extends StructuredComputation<Upr, Upd, SC>> void onSubscribe(SC computation) throws RuntimeException {
+            SC extends StructuredComputation<Upr, Upd, SC>> void onSubscribe(SC computation, Graph<SC, ? extends ApplicationEdge> graph) throws RuntimeException {
 
-        // Notify parents and children of the subscription
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            for (var parent : parents()) {
-                scope.fork(() -> {
-                    parent.onChildSubscribe(computation, (GO) this);
-                    return null;
-                });
-            }
-            for (var child : children()) {
-                scope.fork(() -> {
-                    child.onParentSubscribe(computation, (GO) this);
-                    return null;
-                });
-            }
-            scope.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+//        // Notify parents and children of the subscription
+//        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+//            for (var parent : parentsIn()) { // TODO to be able to implement this, game objects need to track the graph they are in
+//                scope.fork(() -> {
+//                    parent.onChildSubscribe(computation, (GO) this);
+//                    return null;
+//                });
+//            }
+//            for (var child : children()) {
+//                scope.fork(() -> {
+//                    child.onParentSubscribe(computation, (GO) this);
+//                    return null;
+//                });
+//            }
+//            scope.join();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     /**
      * Returns whether this GameObject is updated in a computation.
-     * @param computation
+     * @param updater
      * @return
      * @param <Upr>
      * @param <Upd>
@@ -125,10 +124,10 @@ public abstract class GameObject<GO extends GameObject<GO>> extends ApplicationV
      */
     public <Upr extends Updater<Upr, Upd, SC>,
             Upd extends Updated,
-            SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedInGraphOf(SC computation) {
-        Objects.requireNonNull(computation);
+            SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedIn(Upr updater) {
+        Objects.requireNonNull(updater);
         try {
-            return computation.updatedSet().contains((GO) this);
+            return updater.matches(this) && updater.contains((Upd) this);
         } catch (ClassCastException _) {
             return false;
         }
@@ -156,7 +155,8 @@ public abstract class GameObject<GO extends GameObject<GO>> extends ApplicationV
         if (!computation.updatedClass().isAssignableFrom(this.getClass()))
             return false;
 
-        return computation.findSuccessorComputation(computation.updatedClass().cast(this)).isPresent();
+//        return computation.findSuccessorComputation(computation.updatedClass().cast(this)).isPresent();
+        return false;
     }
 
     /**
@@ -171,10 +171,10 @@ public abstract class GameObject<GO extends GameObject<GO>> extends ApplicationV
             Upd extends Updated,
             SC extends StructuredComputation<Upr, Upd, SC>> boolean isUpdatedBefore(SC computation) {
         Objects.requireNonNull(computation);
-        if (!computation.updatedClass().isAssignableFrom(this.getClass()))
-            return false;
+        computation.updatedClass().isAssignableFrom(this.getClass());
 
-        return computation.findPredecessorComputation(computation.updatedClass().cast(this)).isPresent();
+//        return computation.findPredecessorComputation(computation.updatedClass().cast(this)).isPresent();
+        return false;
     }
 }
 

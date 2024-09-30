@@ -1,6 +1,7 @@
 package juanmanuel.tea.components;
 
-import juanmanuel.tea.graph.ApplicationGraph;
+import juanmanuel.tea.graph.ApplicationEdge;
+import juanmanuel.tea.graph.Graph;
 
 /**
  * Holds the logic to update an object contained in a computation. And organizes the computations of the updated objects
@@ -9,7 +10,10 @@ import juanmanuel.tea.graph.ApplicationGraph;
  * @param <Upd> The updated class
  * @param <SC> The structured computation class
  */
-public interface Updater<Self extends Updater<Self, Upd, SC>, Upd extends Updated, SC extends StructuredComputation<Self, Upd, SC>> {
+public interface Updater<
+        Self extends Updater<Self, Upd, SC>,
+        Upd extends Updated,
+        SC extends StructuredComputation<Self, Upd, SC>> {
     Class<Self> updaterClass();
     Class<Upd> updatedClass();
     Class<SC> computationClass();
@@ -29,14 +33,25 @@ public interface Updater<Self extends Updater<Self, Upd, SC>, Upd extends Update
 
     /// Gets the computation of the updated object from the graph or creates a new one if it does not exist.
     ///
+    /// If the computation does not exist, it is not added to the graph.
+    ///
     /// TODO: Adds the computation to the graph if it does not exist?
     /// @param updated The updated object
     /// @return The computation of the updated object
     SC computationOf(Upd updated);
 
+    SC createComputation(Upd updated);
+
     /// Associated graph that contains the computations of the updated objects
     /// @return The graph
-    ApplicationGraph<SC> graph();
+    Graph<SC, ApplicationEdge> graph();
+
+    /// Checks if the graph contains the computation of the updated object
+    /// @param updated The updated object
+    /// @return True if the graph contains the computation
+    default boolean contains(Upd updated) {
+        return graph().vertexSet().stream().anyMatch(computation -> computation.updated().equals(updated));
+    }
 
     /**
      * Checks if the object matches the updater and therefore can be added and updated by it

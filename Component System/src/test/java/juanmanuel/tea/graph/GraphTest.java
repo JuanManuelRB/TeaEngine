@@ -15,7 +15,7 @@ class GraphTest {
         DummyVertex[] vertices = new DummyVertex[10];
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex(STR."Vertex \{i}");
+            vertices[i] = new DummyVertex("Vertex " + i);
             graph.addVertex(vertices[i]);
         }
 
@@ -25,7 +25,7 @@ class GraphTest {
         DummyVertex[] children = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 
@@ -46,7 +46,7 @@ class GraphTest {
         DummyVertex[] vertices = new DummyVertex[10];
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex(STR."Vertex \{i}");
+            vertices[i] = new DummyVertex("Vertex " + i);
             graph.addVertex(vertices[i]);
         }
 
@@ -56,7 +56,7 @@ class GraphTest {
         DummyVertex[] parents = new DummyVertex[10];
 
         for (int i = 0; i < parents.length; i++) {
-            parents[i] = new DummyVertex(STR."Parent \{i}");
+            parents[i] = new DummyVertex("Parent " + i);
             graph.addVertex(parents[i]);
         }
 
@@ -96,7 +96,7 @@ class GraphTest {
         DummyVertex[] parents = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 
@@ -117,7 +117,7 @@ class GraphTest {
         }
 
         for (int i = 0; i < parents.length; i++) {
-            parents[i] = new DummyVertex(STR."Parent \{i}");
+            parents[i] = new DummyVertex("Parent " + i);
             graph.addVertex(parents[i]);
             graph.addEdge(parents[i], vertex);
             assertEquals(s, graph.egressEdgesOf(vertex).size());
@@ -132,7 +132,7 @@ class GraphTest {
         DummyVertex[] parents = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 
@@ -153,7 +153,7 @@ class GraphTest {
         }
 
         for (int i = 0; i < parents.length; i++) {
-            parents[i] = new DummyVertex(STR."Parent \{i}");
+            parents[i] = new DummyVertex("Parent " + i);
             graph.addVertex(parents[i]);
             graph.addEdge(vertex, parents[i]);
             assertEquals(s, graph.ingressEdgesOf(vertex).size());
@@ -166,82 +166,82 @@ class GraphTest {
         DummyVertex[] vertices = new DummyVertex[10];
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex(STR."Vertex \{i}");
+            vertices[i] = new DummyVertex("Vertex " + i);
             graph.addVertex(vertices[i]);
             assertEquals(i + 1, graph.size());
         }
     }
 
     @Test
-    void getParents() {
+    void parentsOf() {
         DummyGraph graph = new DummyGraph();
         DummyVertex vertex = new DummyVertex("Vertex");
         DummyVertex[] children = new DummyVertex[10];
         DummyVertex[] parents = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 
-        assertEquals(0, graph.getParents(vertex).size());
+        assertEquals(0, graph.parentsOf(vertex).size());
 
         graph.addVertex(vertex);
-        assertEquals(0, graph.getParents(vertex).size());
+        assertEquals(0, graph.parentsOf(vertex).size());
 
         for (var child : children) {
             graph.addVertex(child);
-            assertEquals(0, graph.getParents(vertex).size());
+            assertEquals(0, graph.parentsOf(vertex).size());
         }
 
         for (var child : children) {
             graph.addEdge(vertex, child);
-            assertEquals(1, graph.getParents(child).size());
+            assertEquals(1, graph.parentsOf(child).size());
         }
 
         for (int i = 0; i < parents.length; i++) {
-            parents[i] = new DummyVertex(STR."Parent \{i}");
+            parents[i] = new DummyVertex("Parent " + i);
             graph.addVertex(parents[i]);
             graph.addEdge(parents[i], vertex);
-            assertEquals(i + 1, graph.getParents(vertex).size());
+            assertEquals(i + 1, graph.parentsOf(vertex).size());
         }
     }
 
     @Test
-    void getChildren() {
+    void childrenOf() {
         DummyGraph graph = new DummyGraph();
         DummyVertex vertex = new DummyVertex("Vertex");
         DummyVertex[] children = new DummyVertex[10];
         DummyVertex[] parents = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 
-        assertThrows(IllegalArgumentException.class, () -> graph.getChildren(vertex));
+        assertThrows(IllegalArgumentException.class, () -> graph.childrenOf(vertex));
 
         graph.addVertex(vertex);
-        assertEquals(0, graph.getChildren(vertex).size());
+        assertEquals(0, graph.childrenOf(vertex).size());
 
         for (var child : children) {
             graph.addVertex(child);
-            assertEquals(0, graph.getChildren(vertex).size());
+            assertEquals(0, graph.childrenOf(vertex).size());
         }
 
 
         for (int i = 0; i < children.length; i++) {
             graph.addEdge(vertex, children[i]);
-            assertEquals(i + 1, graph.getChildren(vertex).size());
+            assertEquals(i + 1, graph.childrenOf(vertex).size());
         }
 
-        assertTrue(graph.getChildren(vertex).containsAll(Set.of(children)));
+        assertTrue(graph.childrenOf(vertex).containsAll(Set.of(children)));
 
         for (int i = 0; i < parents.length; i++) {
-            parents[i] = new DummyVertex(STR."Parent \{i}");
+            parents[i] = new DummyVertex("Parent " + i);
             graph.addVertex(parents[i]);
             graph.addEdge(parents[i], vertex);
-            assertEquals(children.length, graph.getChildren(vertex).size());
+            assertEquals(children.length, graph.childrenOf(vertex).size());
         }
     }
 
@@ -251,7 +251,7 @@ class GraphTest {
         DummyVertex[] vertices = new DummyVertex[10];
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex(STR."Vertex \{i}");
+            vertices[i] = new DummyVertex("Vertex " + i);
             graph.addVertex(vertices[i]);
         }
 
@@ -264,7 +264,7 @@ class GraphTest {
         DummyVertex[] children = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 
@@ -284,7 +284,7 @@ class GraphTest {
         DummyVertex[] vertices = new DummyVertex[10];
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex(STR."Vertex \{i}");
+            vertices[i] = new DummyVertex("Vertex " + i);
             graph.addVertex(vertices[i]);
         }
 
@@ -297,7 +297,7 @@ class GraphTest {
         DummyVertex[] parents = new DummyVertex[10];
 
         for (int i = 0; i < parents.length; i++) {
-            parents[i] = new DummyVertex(STR."Parent \{i}");
+            parents[i] = new DummyVertex("Parent " + i);
             graph.addVertex(parents[i]);
         }
 
@@ -317,7 +317,7 @@ class GraphTest {
         DummyVertex[] vertices = new DummyVertex[10];
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex(STR."Vertex \{i}");
+            vertices[i] = new DummyVertex("Vertex " + i);
             graph.addVertex(vertices[i]);
         }
 
@@ -327,7 +327,7 @@ class GraphTest {
         DummyVertex[] children = new DummyVertex[10];
 
         for (int i = 0; i < children.length; i++) {
-            children[i] = new DummyVertex(STR."Child \{i}");
+            children[i] = new DummyVertex("Child " + i);
             graph.addVertex(children[i]);
         }
 

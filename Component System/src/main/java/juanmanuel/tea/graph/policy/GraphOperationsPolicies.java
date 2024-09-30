@@ -46,9 +46,9 @@ public final class GraphOperationsPolicies {
      * @param algorithm the algorithm to use
      * @return the state of the policy
      * @param <P> the type of the policy
-     * @param <G> the type of the graph element
+     * @param <E> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> PolicyState stateOf(P binaryPolicy, G graphElement, PolicyCheckAlgorithm algorithm) {
+    public <P extends GraphPolicy & Policy.UnaryPolicy<E>, E extends GraphElement> PolicyState stateOf(P binaryPolicy, E graphElement, PolicyCheckAlgorithm algorithm) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(graphElement);
         Objects.requireNonNull(algorithm);
@@ -96,9 +96,9 @@ public final class GraphOperationsPolicies {
      * @param graphElement the graph element to check
      * @return the state of the policy
      * @param <P> the type of the policy
-     * @param <G> the type of the graph element
+     * @param <E> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> PolicyState stateOf(P unaryPolicy, G graphElement) {
+    public <P extends GraphPolicy & Policy.UnaryPolicy<E>, E extends GraphElement> PolicyState stateOf(P unaryPolicy, E graphElement) {
         Objects.requireNonNull(unaryPolicy);
         Objects.requireNonNull(graphElement);
 
@@ -111,9 +111,9 @@ public final class GraphOperationsPolicies {
      * @param graphElementType the graph element type to check
      * @return the state of the policy
      * @param <P> the type of the policy
-     * @param <G> the type of the graph element
+     * @param <E> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> PolicyState stateOf(P unaryPolicy, Class<G> graphElementType) {
+    public <P extends GraphPolicy & Policy.UnaryPolicy<E>, E extends GraphElement> PolicyState stateOf(P unaryPolicy, Class<E> graphElementType) {
         Objects.requireNonNull(unaryPolicy);
         Objects.requireNonNull(graphElementType);
 
@@ -133,10 +133,10 @@ public final class GraphOperationsPolicies {
      * @param algorithm the algorithm to use
      * @return the state of the policy
      * @param <P> the type of the policy
-     * @param <G1> the type of the first graph element
-     * @param <G2> the type of the second graph element
+     * @param <E1> the type of the first graph element
+     * @param <E2> the type of the second graph element
      */
-    public <P extends GraphPolicy & Policy.BinaryPolicy<G1, G2>, G1 extends GraphElement, G2 extends GraphElement> PolicyState stateOf(P binaryPolicy, G1 firstElement, G2 secondElement, PolicyCheckAlgorithm algorithm) {
+    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement> PolicyState stateOf(P binaryPolicy, E1 firstElement, E2 secondElement, PolicyCheckAlgorithm algorithm) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(firstElement);
         Objects.requireNonNull(secondElement);
@@ -185,10 +185,10 @@ public final class GraphOperationsPolicies {
      * @param secondElement the second graph element to check
      * @return the state of the policy
      * @param <P> the type of the policy
-     * @param <G1> the type of the first graph element
-     * @param <G2> the type of the second graph element
+     * @param <E1> the type of the first graph element
+     * @param <E2> the type of the second graph element
      */
-    public <P extends GraphPolicy & Policy.BinaryPolicy<G1, G2>, G1 extends GraphElement, G2 extends GraphElement> PolicyState stateOf(P binaryPolicy, G1 firstElement, G2 secondElement) {
+    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement> PolicyState stateOf(P binaryPolicy, E1 firstElement, E2 secondElement) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(firstElement);
         Objects.requireNonNull(secondElement);
@@ -202,10 +202,10 @@ public final class GraphOperationsPolicies {
      * @param graphElementTypePair the graph element type pair to check
      * @return the state of the policy
      * @param <P> the type of the policy
-     * @param <G1> the type of the first graph element
-     * @param <G2> the type of the second graph element
+     * @param <E1> the type of the first graph element
+     * @param <E2> the type of the second graph element
      */
-    public <P extends GraphPolicy & Policy.BinaryPolicy<G1, G2>, G1 extends GraphElement, G2 extends GraphElement> PolicyState stateOf(P binaryPolicy, Pair<Class<G1>, Class<G2>> graphElementTypePair) {
+    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement> PolicyState stateOf(P binaryPolicy, Pair<Class<E1>, Class<E2>> graphElementTypePair) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(graphElementTypePair);
 

@@ -1,12 +1,12 @@
 package juanmanuel.tea.graph.validation;
 
-import juanmanuel.tea.graph.ApplicationVertex;
+import juanmanuel.tea.graph.Vertex;
 
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-public final class GraphOperationValidator<V extends ApplicationVertex<V>> implements OperationValidator {
+public final class GraphOperationValidator<V extends Vertex<V>> implements OperationValidator {
     private final EnumMap<VertexValidation, Set<Predicate<V>>> vertexValidations
             = new EnumMap<>(VertexValidation.class);
     private final EnumMap<EdgeValidation, Set<BiPredicate<V, V>>> graphValidations

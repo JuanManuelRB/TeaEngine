@@ -1,7 +1,5 @@
 package juanmanuel.tea.graph.policy;
 
-import juanmanuel.tea.graph.ApplicationVertex;
-
 import java.lang.ref.WeakReference;
 
 /**
@@ -11,7 +9,7 @@ import java.lang.ref.WeakReference;
  * @param target the target vertex.
  * @param <U>    the type of the vertices.
  */
-public record VertexPair<U extends ApplicationVertex<U>>(WeakReference<U> source, WeakReference<U> target) {
+public record VertexPair<U extends juanmanuel.tea.graph.Vertex<U>>(WeakReference<U> source, WeakReference<U> target) {
     public VertexPair(U source, U target) {
         this(new WeakReference<>(source), new WeakReference<>(target));
     }

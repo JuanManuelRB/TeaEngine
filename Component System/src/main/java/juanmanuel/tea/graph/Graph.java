@@ -126,10 +126,8 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
                 return fail(new FailureResults.RejectedByGraphPolicy("The graph policy rejected the vertex addition", this));
             }
             case UNSET -> {
-                if (acceptUnsetPolicy())
-                    return success();
-
-                return fail(new FailureResults.RejectedByGraphPolicy("The graph policy rejected the vertex addition", this));
+                if (!acceptUnsetPolicy())
+                    return fail(new FailureResults.RejectedByGraphPolicy("The graph policy rejected the vertex addition", this));
             }
         }
 
@@ -182,7 +180,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
      * Sets the behavior of the policy when it is not set.
      * @param behavior True if the policy should accept the operation when it is not set, false otherwise.
      */
-    public void setAcceptUnsetPolicy(boolean behavior) {
+    public void acceptUnsetPolicy(boolean behavior) {
         acceptUnsetPolicy = behavior;
     }
 
@@ -1086,6 +1084,11 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
     protected void onConnect(V source, V target) throws RuntimeException {} // TODO
 
     protected void onDisconnect(V source, V target) throws RuntimeException {} // TODO
+
+    @Override
+    public String toString() {
+        return graph.toString();
+    }
 
     public enum VertexCallbackType implements Graph.CallbackType {
         ON_ADD_VERTEX, ON_REMOVE_VERTEX

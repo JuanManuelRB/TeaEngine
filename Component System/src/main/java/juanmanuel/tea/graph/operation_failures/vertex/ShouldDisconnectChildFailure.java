@@ -1,0 +1,6 @@
+package juanmanuel.tea.graph.operation_failures.vertex;
+
+import juanmanuel.tea.graph.operation_failures.FailureResults;
+
+public sealed interface ShouldDisconnectChildFailure extends ShouldDisconnectFailure permits FailureResults.VertexNotPresent, FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference {
+}

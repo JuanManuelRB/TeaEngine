@@ -1,5 +1,7 @@
 package juanmanuel.tea.graph;
 
+import juanmanuel.tea.utils.Result;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -12,31 +14,46 @@ class VertexTest {
 
     @Test
     void egressEdgesIn() {
-        DummyGraph graph = new DummyGraph();
-        DummyVertex vertex = new DummyVertex();
+        DummyGraph graph = new DummyGraph(true);
+        DummyVertex vertex = new DummyVertex("Test Vertex", true);
 
-        assertEquals(0, vertex.egressEdgesIn(graph).size());
+        assertEquals(0, vertex.egressEdgesIn(graph).size(), "If the vertex is not in the graph, the egress edges should be empty");
 
         graph.addVertex(vertex);
-        assertEquals(1, vertex.egressEdgesIn(graph).size());
+        assertEquals(0, vertex.egressEdgesIn(graph).size(), "Egress edges should not contain any edge if the vertex has no children");
 
         DummyVertex[] vertices = new DummyVertex[10];
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex("Vertex " + i);
-            graph.addVertex(vertices[i]);
-            assertEquals(0, vertex.egressEdgesIn(graph).size());
+            vertices[i] = new DummyVertex("Vertex " + i, true);
+            switch (graph.addVertex(vertices[i])) {
+                case Result.Failure<DummyVertex, Graph.VertexAdditionFailure> v ->
+                        Assertions.fail("The vertex addition operation should be successful\n"
+                        + "The error is: " + v.cause().getClass() + ": " + v.cause().message());
+                case Result.Success<DummyVertex, Graph.VertexAdditionFailure> v -> {
+                }
+            }
+
+            assertEquals(0, vertex.egressEdgesIn(graph).size(), "The vertex " + i + " should not be in the egress edges");
         }
 
         for (int i = 0; i < vertices.length; i++) {
-            graph.addEdge(vertex, vertices[i]);
-            assertEquals(i + 1, vertex.egressEdgesIn(graph).size());
+
+            switch (graph.addEdge(vertex, vertices[i])) {
+                case Result.Failure<ApplicationEdge, Graph.EdgeAdditionFailure> v ->
+                        Assertions.fail("The edge addition operation should be successful\n"
+                        + "The error is: " + v.cause().getClass() + ": " + v.cause().message());
+                case Result.Success<ApplicationEdge, Graph.EdgeAdditionFailure> v -> {
+                }
+            }
+            assertEquals(i + 1, vertex.egressEdgesIn(graph).size(), "The vertex " + i + " should be in the egress edges");
         }
+        System.out.println(graph);
     }
 
     @Test
     void ingressEdgesIn() {
-        DummyGraph graph = new DummyGraph();
-        DummyVertex vertex = new DummyVertex();
+        DummyGraph graph = new DummyGraph(true);
+        DummyVertex vertex = new DummyVertex(true);
 
         assertEquals(0, vertex.ingressEdgesIn(graph).size());
 
@@ -45,7 +62,7 @@ class VertexTest {
 
         DummyVertex[] vertices = new DummyVertex[10];
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex("Vertex " + i);
+            vertices[i] = new DummyVertex("Vertex " + i, true);
             graph.addVertex(vertices[i]);
             assertEquals(0, vertex.ingressEdgesIn(graph).size());
         }
@@ -58,8 +75,8 @@ class VertexTest {
 
     @Test
     void childrenIn() {
-        DummyGraph graph = new DummyGraph();
-        DummyVertex vertex = new DummyVertex();
+        DummyGraph graph = new DummyGraph(true);
+        DummyVertex vertex = new DummyVertex(true);
 
         assertEquals(0, vertex.childrenIn(graph).size());
 
@@ -68,7 +85,7 @@ class VertexTest {
 
         DummyVertex[] vertices = new DummyVertex[10];
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex("Vertex " + i);
+            vertices[i] = new DummyVertex("Vertex " + i, true);
             graph.addVertex(vertices[i]);
             assertEquals(0, vertex.childrenIn(graph).size());
         }
@@ -82,8 +99,8 @@ class VertexTest {
 
     @Test
     void parentsIn() {
-        DummyGraph graph = new DummyGraph();
-        DummyVertex vertex = new DummyVertex();
+        DummyGraph graph = new DummyGraph(true);
+        DummyVertex vertex = new DummyVertex(true);
 
         assertEquals(0, vertex.parentsIn(graph).size());
 
@@ -92,7 +109,7 @@ class VertexTest {
 
         DummyVertex[] vertices = new DummyVertex[10];
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = new DummyVertex("Vertex " + i);
+            vertices[i] = new DummyVertex("Vertex " + i, true);
             graph.addVertex(vertices[i]);
             assertEquals(0, vertex.parentsIn(graph).size());
         }
@@ -106,8 +123,8 @@ class VertexTest {
 
     @Test
     void descendantsIn() {
-        DummyGraph graph = new DummyGraph();
-        DummyVertex vertex = new DummyVertex();
+        DummyGraph graph = new DummyGraph(true);
+        DummyVertex vertex = new DummyVertex(true);
 
         assertEquals(0, vertex.descendantsIn(graph).size());
 
@@ -116,7 +133,7 @@ class VertexTest {
 
         DummyVertex[] childrenVertices = new DummyVertex[10];
         for (int i = 0; i < childrenVertices.length; i++) {
-            childrenVertices[i] = new DummyVertex("Vertex " + i);
+            childrenVertices[i] = new DummyVertex("Vertex " + i, true);
             graph.addVertex(childrenVertices[i]);
             assertEquals(0, vertex.descendantsIn(graph).size());
         }
@@ -130,7 +147,7 @@ class VertexTest {
 
         DummyVertex[] grandChildrenVertices = new DummyVertex[10];
         for (int i = 0; i < grandChildrenVertices.length; i++) {
-            grandChildrenVertices[i] = new DummyVertex("Vertex " + i);
+            grandChildrenVertices[i] = new DummyVertex("Vertex " + i, true);
             graph.addVertex(grandChildrenVertices[i]);
         }
 

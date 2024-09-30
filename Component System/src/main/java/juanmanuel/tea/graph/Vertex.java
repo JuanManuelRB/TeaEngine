@@ -1,7 +1,10 @@
 package juanmanuel.tea.graph;
 
 import juanmanuel.tea.graph.callbacks.VertexCallbackManager;
+import juanmanuel.tea.graph.callbacks.vertex.GraphCallbackType;
+import juanmanuel.tea.graph.callbacks.vertex.VertexCallbackType;
 import juanmanuel.tea.graph.operation_failures.FailureResults;
+import juanmanuel.tea.graph.operation_failures.vertex.*;
 import juanmanuel.tea.graph.policy.VertexOperationsPolicies;
 import juanmanuel.tea.graph.validation.VertexOperationValidator;
 import juanmanuel.tea.utils.Result;
@@ -61,6 +64,10 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @return True if the policy should accept the operation when it is not set, false otherwise.
     public boolean acceptOnUnsetPolicy() {
         return acceptOnUnsetPolicy;
+    }
+
+    public void acceptOnUnsetPolicy(boolean acceptOnUnsetPolicy) {
+        this.acceptOnUnsetPolicy = acceptOnUnsetPolicy;
     }
 
     /// Gets the policies manager of this vertex or creates it if it does not exist.
@@ -344,7 +351,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      * @param child The child node to check.
      * @return A {@link Result} indicating whether the edge can be created, and if not, the rejection reason.
      */
-    public final Result<Void, Vertex.ShouldConnectChildFailure> shouldConnectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<Void, ShouldConnectChildFailure> shouldConnectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
 
@@ -375,7 +382,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      * @return A {@link Result} indicating whether the edge can be created, and if not, the rejection reason.
      * @throws NullPointerException if the parent is null.
      */
-    public final Result<Void, Vertex.ShouldConnectParentFailure> shouldConnectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<Void, ShouldConnectParentFailure> shouldConnectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
 
@@ -406,7 +413,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      * @return A {@link Result} indicating whether the edge can be removed, and if not, the reason for rejection.
      * @throws NullPointerException if the child is null.
      */
-    public final Result<Void, Vertex.ShouldDisconnectChildFailure> shouldDisconnectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<Void, ShouldDisconnectChildFailure> shouldDisconnectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
 
@@ -435,7 +442,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      * @param parent The parent node to check.
      * @return A {@link Result} indicating whether the edge can be removed, and if not, the reason for rejection.
      */
-    public final Result<Void, Vertex.ShouldDisconnectParentFailure> shouldDisconnectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<Void, ShouldDisconnectParentFailure> shouldDisconnectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
 
@@ -471,13 +478,13 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      *         - A Present Result containing the child node if the child node is present in the graph and can be attached to the current node.
      * @throws NullPointerException if the child node is null.
      */
-    public final Result<Void, Vertex.ShouldAddChildFailure> shouldAddChild(Self child, Graph<? super Self, ApplicationEdge> graph)
+    public final Result<Void, ShouldAddChildFailure> shouldAddChild(Self child, Graph<? super Self, ApplicationEdge> graph)
             throws NullPointerException ,GraphOperationException {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
 
         return switch (shouldConnectChild(child, graph)) {
-            case Result.Failure<?, Vertex.ShouldConnectChildFailure>(Vertex.ShouldConnectChildFailure cause) -> switch (cause) {
+            case Result.Failure<?, ShouldConnectChildFailure>(ShouldConnectChildFailure cause) -> switch (cause) {
                 case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> fail(edgeAlreadyExists);
                 case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
                 case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
@@ -510,13 +517,13 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      * @return A {@link Result} indicating whether the parent should be added, and if not, the reason for rejection.
      * @throws NullPointerException if the parent is null.
      */
-    public final Result<Void, Vertex.ShouldAddParentFailure> shouldAddParent(Self parent, Graph<? super Self, ApplicationEdge> graph)
+    public final Result<Void, ShouldAddParentFailure> shouldAddParent(Self parent, Graph<? super Self, ApplicationEdge> graph)
             throws NullPointerException, GraphOperationException {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
 
         return switch (shouldConnectParent(parent, graph)) {
-            case Result.Failure<?, Vertex.ShouldConnectParentFailure>(Vertex.ShouldConnectParentFailure cause) -> switch (cause) {
+            case Result.Failure<?, ShouldConnectParentFailure>(ShouldConnectParentFailure cause) -> switch (cause) {
                 case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> fail(edgeAlreadyExists);
                 case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
                 case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
@@ -549,7 +556,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @param child The child node to be removed.
     /// @return A [Result] indicating whether the child should be removed, and if not, the reason for rejection.
     /// @throws NullPointerException if the child is null.
-    public final Result<Void, Vertex.ShouldRemoveChildFailure> shouldRemoveChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<Void, ShouldRemoveChildFailure> shouldRemoveChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
 
@@ -608,7 +615,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      * @param parent The parent node to be removed.
      * @return A {@link Result} indicating whether the parent should be removed, and if not, the reason for rejection.
      */
-    private Result<Void, Vertex.ShouldRemoveParentFailure> shouldRemoveParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
+    private Result<Void, ShouldRemoveParentFailure> shouldRemoveParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
 
@@ -650,7 +657,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @throws NullPointerException if the child or the graph is null.
     /// @throws UnsupportedOperationException if the operation is not supported or the graph could not create the edge.
     /// @throws GraphOperationException if an exceptional state is encountered during the operation.
-    private Result<ApplicationEdge, Vertex.ChildConnectionFailure> handleChildConnection(Self child, double weight, Graph<? super Self, ApplicationEdge> graph)
+    private Result<ApplicationEdge, ChildConnectionFailure> handleChildConnection(Self child, double weight, Graph<? super Self, ApplicationEdge> graph)
             throws NullPointerException, UnsupportedOperationException, GraphOperationException {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
@@ -717,7 +724,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @throws NullPointerException if the parent or the graph is null.
     /// @throws UnsupportedOperationException if the operation is not supported or the graph could not create the edge.
     /// @throws GraphOperationException if an exceptional state is encountered during the operation.
-    private Result<ApplicationEdge, Vertex.ParentConnectionFailure> handleParentConnection(Self parent, double weight, Graph<? super Self, ApplicationEdge> graph)
+    private Result<ApplicationEdge, ParentConnectionFailure> handleParentConnection(Self parent, double weight, Graph<? super Self, ApplicationEdge> graph)
             throws NullPointerException, UnsupportedOperationException, GraphOperationException {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
@@ -783,7 +790,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @return A [Result] indicating whether the child was added, and if not, the reason for failure.
     /// @throws NullPointerException if the child or the graph is null.
     /// @throws UnsupportedOperationException if the operation is not supported or the graph could not create the edge.
-    private Result<Self, Vertex.ChildAdditionFailure> handleChildAddition(Self child, double weight, Graph<Self, ApplicationEdge> graph)
+    private Result<Self, ChildAdditionFailure> handleChildAddition(Self child, double weight, Graph<Self, ApplicationEdge> graph)
             throws NullPointerException, GraphCycleProhibitedException, UnsupportedOperationException {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
@@ -825,7 +832,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                 case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
                 case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
                 case FailureResults.VertexAlreadyPresent _ -> switch (handleChildConnection(child, weight, graph)) {
-                    case Result.Failure<ApplicationEdge, Vertex.ChildConnectionFailure>(var ccf) -> switch (ccf) {
+                    case Result.Failure<ApplicationEdge, ChildConnectionFailure>(var ccf) -> switch (ccf) {
                         case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> fail(edgeAlreadyExists);
                         case FailureResults.GraphCycleDetected graphCycleDetected -> fail(graphCycleDetected);
                         case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> fail(rejectedByGraphPolicy);
@@ -835,7 +842,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                         case FailureResults.SelfReference selfReference -> fail(selfReference);
                         case FailureResults.VertexNotPresent vertexNotPresent -> fail(vertexNotPresent);
                     };
-                    case Result.Success<ApplicationEdge, Vertex.ChildConnectionFailure> _ -> success();
+                    case Result.Success<ApplicationEdge, ChildConnectionFailure> _ -> success();
                 };
             };
         };
@@ -856,7 +863,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @throws NullPointerException if the parent or the graph is null.
     /// @throws GraphCycleProhibitedException if a cycle is detected in the graph.
     /// @throws UnsupportedOperationException if the operation is not supported or the graph could not create the edge.
-    private Result<Self, Vertex.ParentAdditionFailure> handleParentAddition(Self parent, double weight, Graph<Self, ApplicationEdge> graph)
+    private Result<Self, ParentAdditionFailure> handleParentAddition(Self parent, double weight, Graph<Self, ApplicationEdge> graph)
             throws NullPointerException, GraphCycleProhibitedException, UnsupportedOperationException {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
@@ -898,7 +905,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                 case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
                 case FailureResults.RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
                 case FailureResults.VertexAlreadyPresent _ -> switch (handleParentConnection(parent, weight, graph)) {
-                    case Result.Failure<ApplicationEdge, Vertex.ParentConnectionFailure>(var pcf) -> switch (pcf) {
+                    case Result.Failure<ApplicationEdge, ParentConnectionFailure>(var pcf) -> switch (pcf) {
                         case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> fail(edgeAlreadyExists);
                         case FailureResults.GraphCycleDetected graphCycleDetected -> fail(graphCycleDetected);
                         case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> fail(rejectedByGraphPolicy);
@@ -908,7 +915,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                         case FailureResults.SelfReference selfReference -> fail(selfReference);
                         case FailureResults.VertexNotPresent vertexNotPresent -> fail(vertexNotPresent);
                     };
-                    case Result.Success<ApplicationEdge, Vertex.ParentConnectionFailure> _ -> success();
+                    case Result.Success<ApplicationEdge, ParentConnectionFailure> _ -> success();
                 };
             };
         };
@@ -920,7 +927,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @throws NullPointerException
     /// @throws UnsupportedOperationException
     /// @throws GraphOperationException
-    protected Result<ApplicationEdge, Vertex.ChildDisconnectionFailure> handleChildDisconnection(Self child, Graph<? super Self, ApplicationEdge> graph)
+    protected Result<ApplicationEdge, ChildDisconnectionFailure> handleChildDisconnection(Self child, Graph<? super Self, ApplicationEdge> graph)
             throws NullPointerException, UnsupportedOperationException, GraphOperationException {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
@@ -975,7 +982,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @param graph
     /// @return
     /// @throws IllegalStateException
-    protected Result<ApplicationEdge, Vertex.ParentDisconnectionFailure> handleParentDisconnection(Self parent, Graph<? super Self, ApplicationEdge> graph)
+    protected Result<ApplicationEdge, ParentDisconnectionFailure> handleParentDisconnection(Self parent, Graph<? super Self, ApplicationEdge> graph)
             throws IllegalStateException {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
@@ -1032,7 +1039,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @throws IllegalStateException
     /// @throws InterruptedException
     @SuppressWarnings("unchecked")
-    protected <T extends Vertex<T>> Result<Self, Vertex.ChildRemovalFailure> handleChildRemoval(Self child, Graph<? super Self, ApplicationEdge> graph)
+    protected <T extends Vertex<T>> Result<Self, ChildRemovalFailure> handleChildRemoval(Self child, Graph<? super Self, ApplicationEdge> graph)
             throws IllegalStateException {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
@@ -1062,7 +1069,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @throws InterruptedException
     /// @throws IllegalStateException
     @SuppressWarnings("unchecked")
-    private Result<Self, Vertex.ParentRemovalFailure> handleParentRemoval(Self parent, Graph<? super Self, ApplicationEdge> graph)
+    private Result<Self, ParentRemovalFailure> handleParentRemoval(Self parent, Graph<? super Self, ApplicationEdge> graph)
             throws IllegalStateException {
         Objects.requireNonNull(parent);
         Objects.requireNonNull(graph);
@@ -1103,12 +1110,12 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @return A [Result] indicating the outcome of the connection attempt.
     /// If the connection is successful, the edge is returned enclosed in a [Result.Success] instance.
     /// If the connection fails, the reason for the failure is returned enclosed in a [Result.Failure] instance.
-    public final Result<ApplicationEdge, Vertex.ChildConnectionFailure> connectChild(Self child, double weight, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<ApplicationEdge, ChildConnectionFailure> connectChild(Self child, double weight, Graph<? super Self, ApplicationEdge> graph) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(graph);
 
         return switch (handleChildConnection(child, weight, graph)) {
-            case Result.Failure<ApplicationEdge, Vertex.ChildConnectionFailure>(var f) -> switch (f) {
+            case Result.Failure<ApplicationEdge, ChildConnectionFailure>(var f) -> switch (f) {
                 case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> fail(rejectedByGraphPolicy);
                 case FailureResults.RejectedByGraphValidation rejectedByGraphValidation -> fail(rejectedByGraphValidation);
                 case FailureResults.RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
@@ -1118,7 +1125,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                 case FailureResults.VertexNotPresent vertexNotPresent -> fail(vertexNotPresent);
                 case FailureResults.EdgeAlreadyExists edgeAlreadyExists -> fail(edgeAlreadyExists);
             };
-            case Result.Success<ApplicationEdge, Vertex.ChildConnectionFailure>(var e) -> success(e);
+            case Result.Success<ApplicationEdge, ChildConnectionFailure>(var e) -> success(e);
         };
     }
 
@@ -1135,7 +1142,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @return A [Result] indicating the outcome of the connection attempt.
     /// If the connection is successful, the edge is returned enclosed in a [Result.Success] instance.
     /// If the connection fails, the reason for the failure is returned enclosed in a [Result.Failure] instance.
-    public final Result<ApplicationEdge, Vertex.ChildConnectionFailure> connectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<ApplicationEdge, ChildConnectionFailure> connectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
         return connectChild(child, 1.0, graph);
     }
 
@@ -1153,10 +1160,10 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// If the operation is successful, the child is returned enclosed in a [Result.Success] instance.
     /// If the operation fails, the reason for the failure is returned enclosed in a [Result.Failure] instance.
     /// @throws NullPointerException if the child or the graph is null.
-    public final Result<Self, Vertex.ChildAdditionFailure> addChild(Self child, double weight, Graph<Self, ApplicationEdge> graph)
+    public final Result<Self, ChildAdditionFailure> addChild(Self child, double weight, Graph<Self, ApplicationEdge> graph)
             throws NullPointerException {
         return switch (handleChildAddition(child, weight, graph)) {
-            case Result.Failure<Self, Vertex.ChildAdditionFailure> f -> f;
+            case Result.Failure<Self, ChildAdditionFailure> f -> f;
             case Result.Success<Self, ?>(var c) -> success(c);
         };
     }
@@ -1171,7 +1178,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// If the operation is successful, the child is returned enclosed in a [Result.Success] instance.
     /// If the operation fails, the reason for the failure is returned enclosed in a [Result.Failure] instance.
     /// @throws NullPointerException if the child or the graph is null.
-    public final Result<Self, Vertex.ChildAdditionFailure> addChild(Self child, Graph<Self, ApplicationEdge> graph)
+    public final Result<Self, ChildAdditionFailure> addChild(Self child, Graph<Self, ApplicationEdge> graph)
             throws IllegalArgumentException {
         return addChild(child, 1.0, graph);
     }
@@ -1185,37 +1192,37 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @param parent The child to connect.
     /// @return A [Result.Success] with the edge connecting the parent to the current node if the operation was successful, an
     /// empty [Result] if nothing was connected, or a [Result.Failure] with the reason for the failure.
-    public final Result<ApplicationEdge, Vertex.ParentConnectionFailure> connectParent(Self parent, double weight, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<ApplicationEdge, ParentConnectionFailure> connectParent(Self parent, double weight, Graph<? super Self, ApplicationEdge> graph) {
         return handleParentConnection(parent, weight, graph);
     }
 
-    public final Result<ApplicationEdge, Vertex.ParentConnectionFailure> connectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<ApplicationEdge, ParentConnectionFailure> connectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
         return connectParent(parent, 1.0, graph);
     }
 
-    public final Result<Self, Vertex.ParentAdditionFailure> addParent(Self parent, double weight, Graph<Self, ApplicationEdge> graph)
+    public final Result<Self, ParentAdditionFailure> addParent(Self parent, double weight, Graph<Self, ApplicationEdge> graph)
             throws NullPointerException {
         return handleParentAddition(parent, weight, graph);
     }
 
-    public final Result<Self, Vertex.ParentAdditionFailure> addParent(Self parent, Graph<Self, ApplicationEdge> graph) throws IllegalArgumentException {
+    public final Result<Self, ParentAdditionFailure> addParent(Self parent, Graph<Self, ApplicationEdge> graph) throws IllegalArgumentException {
         return addParent(parent, 1.0, graph);
     }
 
-    public final Result<ApplicationEdge, Vertex.ChildDisconnectionFailure> disconnectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<ApplicationEdge, ChildDisconnectionFailure> disconnectChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
         return handleChildDisconnection(child, graph);
     }
 
-    public final Result<Self, Vertex.ChildRemovalFailure> removeChild(Self child, Graph<Self, ApplicationEdge> graph) {
+    public final Result<Self, ChildRemovalFailure> removeChild(Self child, Graph<Self, ApplicationEdge> graph) {
         return handleChildRemoval(child, graph);
     }
 
-    public final Result<ApplicationEdge, Vertex.ParentDisconnectionFailure> disconnectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
+    public final Result<ApplicationEdge, ParentDisconnectionFailure> disconnectParent(Self parent, Graph<? super Self, ApplicationEdge> graph) {
         return handleParentDisconnection(parent, graph);
     }
 
-    public final Result<Self, Set<Vertex.ChildDisconnectionFailure>> disconnectChildren(Graph<Self, ApplicationEdge> graph) {
-        Set<Vertex.ChildDisconnectionFailure> failures = new HashSet<>();
+    public final Result<Self, Set<ChildDisconnectionFailure>> disconnectChildren(Graph<Self, ApplicationEdge> graph) {
+        Set<ChildDisconnectionFailure> failures = new HashSet<>();
         for (Self child : graph.childrenOf(self()))
             disconnectChild(child, graph).ifFailure(failures::add);
 
@@ -1225,16 +1232,16 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
         return fail(failures);
     }
 
-    public final Result<Void, Set<Vertex.ChildDisconnectionFailure>> disconnectChildren(Graph<Self, ApplicationEdge> graph, Predicate<Self> predicate) {
-        Set<Vertex.ChildDisconnectionFailure> failures = new HashSet<>();
+    public final Result<Void, Set<ChildDisconnectionFailure>> disconnectChildren(Graph<Self, ApplicationEdge> graph, Predicate<Self> predicate) {
+        Set<ChildDisconnectionFailure> failures = new HashSet<>();
         Set<Self> pending = new HashSet<>();
         try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
             for (Self child : graph.childrenOf(self())) {
                 scope.fork(() -> {
                     if (predicate.test(child))
                         switch (shouldDisconnectChild(child, graph)) {
-                            case Result.Failure<Void, Vertex.ShouldDisconnectChildFailure>(
-                                    Vertex.ShouldDisconnectChildFailure f) -> {
+                            case Result.Failure<Void, ShouldDisconnectChildFailure>(
+                                    ShouldDisconnectChildFailure f) -> {
                                 switch (f) {
                                     case FailureResults.EdgeNotPresent _, FailureResults.VertexNotPresent _ -> {}
                                     default -> failures.add(switch (f) {
@@ -1247,7 +1254,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                                     });
                                 }
                             }
-                            case Result.Success<Void, Vertex.ShouldDisconnectChildFailure> _ -> pending.add(child);
+                            case Result.Success<Void, ShouldDisconnectChildFailure> _ -> pending.add(child);
                         }
                     return null;
                 });
@@ -1272,22 +1279,22 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
         }
     }
 
-    public final Result<Void, Set<Vertex.ParentDisconnectionFailure>> disconnectParents(Graph<Self, ApplicationEdge> graph) {
+    public final Result<Void, Set<ParentDisconnectionFailure>> disconnectParents(Graph<Self, ApplicationEdge> graph) {
         return disconnectParents(graph, _ -> true);
     }
 
     /// Tries to disconnect all the parents of the current node that satisfy the given predicate.
     /// If any of the disconnections fail, a
-    public final Result<Void, Set<Vertex.ParentDisconnectionFailure>> disconnectParents(Graph<Self, ApplicationEdge> graph, Predicate<Self> predicate) {
-        Set<Vertex.ParentDisconnectionFailure> failures = new HashSet<>();
+    public final Result<Void, Set<ParentDisconnectionFailure>> disconnectParents(Graph<Self, ApplicationEdge> graph, Predicate<Self> predicate) {
+        Set<ParentDisconnectionFailure> failures = new HashSet<>();
         Set<Self> pending = new HashSet<>();
         try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
             for (Self parent : graph.parentsOf(self())) {
                 scope.fork(() -> {
                     if (predicate.test(parent))
                         switch (shouldDisconnectParent(parent, graph)) {
-                            case Result.Failure<Void, Vertex.ShouldDisconnectParentFailure>(
-                                    Vertex.ShouldDisconnectParentFailure f) -> {
+                            case Result.Failure<Void, ShouldDisconnectParentFailure>(
+                                    ShouldDisconnectParentFailure f) -> {
                                 switch (f) {
                                     case FailureResults.EdgeNotPresent _, FailureResults.VertexNotPresent _ -> {}
                                     default -> failures.add(switch (f) {
@@ -1300,7 +1307,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                                     });
                                 }
                             }
-                            case Result.Success<Void, Vertex.ShouldDisconnectParentFailure> _ -> pending.add(parent);
+                            case Result.Success<Void, ShouldDisconnectParentFailure> _ -> pending.add(parent);
                         }
                     return null;
                 });
@@ -1325,12 +1332,12 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
         }
     }
 
-    public final Result<Self, Vertex.ParentRemovalFailure> removeParent(Self parent, Graph<Self, ApplicationEdge> graph) {
+    public final Result<Self, ParentRemovalFailure> removeParent(Self parent, Graph<Self, ApplicationEdge> graph) {
         return handleParentRemoval(parent, graph);
     }
 
     @SuppressWarnings("unchecked")
-    private Result<Self, Vertex.RemoveFailure> handleRemoval(Graph<? super Self, ApplicationEdge> graph) {
+    private Result<Self, RemoveFailure> handleRemoval(Graph<? super Self, ApplicationEdge> graph) {
         return switch (graph.removeVertex(self())) {
             case Result.Failure<?, Graph.VertexRemovalFailure>(var vrf) -> switch (vrf) {
                 case FailureResults.RejectedByGraphPolicy rejectedByGraphPolicy -> fail(rejectedByGraphPolicy);
@@ -1358,17 +1365,17 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      *         - A Failure Result with a GraphModificationException if there was an issue with the removal.
      * @throws RuntimeException if an InterruptedException is thrown during the removal process.
      */
-    protected final Result<Self, Vertex.RemoveFailure> removeFromGraph(Graph<? super Self, ApplicationEdge> graph) {
+    protected final Result<Self, RemoveFailure> removeFromGraph(Graph<? super Self, ApplicationEdge> graph) {
         return handleRemoval(graph);
     }
 
     public boolean shouldCallOnEnterGraphFor(Graph<?, ?> graph) {
-        return policiesManager.stateOf(ON_ENTER_GRAPH_POLICY, graph) == ACCEPT
+        return policiesManager().stateOf(ON_ENTER_GRAPH_POLICY, graph) == ACCEPT
                 || (acceptOnUnsetPolicy() && policiesManager.stateOf(ON_ENTER_GRAPH_POLICY, graph) == UNSET);
     }
 
     public boolean shouldCallOnLeaveGraphFor(Graph<?, ?> graph) {
-        return policiesManager.stateOf(ON_LEAVE_GRAPH_POLICY, graph) == ACCEPT
+        return policiesManager().stateOf(ON_LEAVE_GRAPH_POLICY, graph) == ACCEPT
                 || (acceptOnUnsetPolicy() && policiesManager.stateOf(ON_LEAVE_GRAPH_POLICY, graph) == UNSET);
     }
 
@@ -1486,27 +1493,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /// The types of callbacks that can be added to a vertex.
-    /// This is just a marker interface to group the callback types.
-    public sealed interface CallbackType {}
-
-
-
-    /// The types of callbacks that can be added to a vertex.
-    public enum VertexCallbackType implements CallbackType {
-        ON_CONNECT_CHILD,
-        ON_DISCONNECT_CHILD,
-        ON_CONNECT_PARENT,
-        ON_DISCONNECT_PARENT;
-    }
-
-
-    /// The types of callbacks that can be added to a vertex.
-    public enum GraphCallbackType implements CallbackType {
-        ON_ENTER_GRAPH,
-        ON_LEAVE_GRAPH;
     }
 
     /**
@@ -1772,7 +1758,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
 //        return success(edges);
 //    }
 
-    //    public sealed interface ShouldReplaceEdgeResult {}
 //
 //    private Result<ApplicationEdge, ShouldReplaceEdgeResult> shouldReplaceEdge(Self targetConnectedVertex, Self connectionReplacementVertex) {
 //        return null; // TODO: Implement
@@ -1880,87 +1865,4 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
 //        return null; // TODO: Implement
 //    }
 
-    /**
-     * Failure result of shouldConnectChild.
-     */
-    public sealed interface ShouldConnectChildFailure extends Vertex.ShouldConnectFailure permits
-            FailureResults.EdgeAlreadyExists,
-            FailureResults.GraphCycleDetected,
-            FailureResults.RejectedByGraphPolicy,
-            FailureResults.RejectedByGraphValidation,
-            FailureResults.RejectedByVertexPolicy,
-            FailureResults.RejectedByVertexValidation,
-            FailureResults.SelfReference,
-            FailureResults.VertexNotPresent {}
-
-    /**
-     * Failure result of shouldConnectParent.
-     */
-    public sealed interface ShouldConnectParentFailure extends Vertex.ShouldConnectFailure permits FailureResults.EdgeAlreadyExists, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexNotPresent {}
-
-    public sealed interface ShouldDisconnectChildFailure extends Vertex.ShouldDisconnectFailure permits FailureResults.VertexNotPresent, FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference {}
-
-    public sealed interface ShouldDisconnectParentFailure extends Vertex.ShouldDisconnectFailure permits
-            FailureResults.EdgeNotPresent,
-            FailureResults.RejectedByGraphPolicy,
-            FailureResults.RejectedByGraphValidation,
-            FailureResults.RejectedByVertexPolicy,
-            FailureResults.RejectedByVertexValidation,
-            FailureResults.SelfReference,
-            FailureResults.VertexNotPresent {}
-
-    public sealed interface ShouldAddChildFailure extends Vertex.ShouldAddFailure permits FailureResults.EdgeAlreadyExists, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexAlreadyPresent, FailureResults.VertexNotPresent {}
-
-    public sealed interface ShouldAddParentFailure extends Vertex.ShouldAddFailure permits
-            FailureResults.EdgeAlreadyExists,
-            FailureResults.GraphCycleDetected,
-            FailureResults.RejectedByGraphPolicy,
-            FailureResults.RejectedByGraphValidation,
-            FailureResults.RejectedByVertexPolicy,
-            FailureResults.RejectedByVertexValidation,
-            FailureResults.SelfReference,
-            FailureResults.VertexAlreadyPresent,
-            FailureResults.VertexNotPresent {}
-
-    public sealed interface ShouldRemoveChildFailure extends Vertex.ShouldRemoveFailure permits FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexNotPresent {}
-
-    public sealed interface ShouldRemoveParentFailure extends Vertex.ShouldRemoveFailure permits FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexNotPresent {}
-
-    /// Child connection failure result.
-    public sealed interface ChildConnectionFailure extends Vertex.AttachFailureResult permits FailureResults.EdgeAlreadyExists, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexNotPresent {}
-
-    public sealed interface DisconnectFailureResult extends Vertex.OperationFailureResult {}
-
-    public sealed interface ChildDisconnectionFailure extends DisconnectFailureResult permits FailureResults.VertexNotPresent, FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference {}
-
-    public sealed interface ParentDisconnectionFailure extends DisconnectFailureResult permits FailureResults.VertexNotPresent, FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference {}
-
-    public sealed interface ChildRemovalFailure extends Vertex.OperationFailureResult permits FailureResults.VertexNotPresent, FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference {}
-
-    public sealed interface ParentRemovalFailure extends Vertex.OperationFailureResult permits FailureResults.VertexNotPresent, FailureResults.EdgeNotPresent, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference {}
-
-    public sealed interface RemoveFailure permits FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.VertexNotPresent {}
-
-    public sealed interface OperationFailureResult {
-
-        String message();
-    }
-
-    public sealed interface ShouldConnectFailure extends OperationFailureResult {}
-
-    public sealed interface ShouldDisconnectFailure extends OperationFailureResult {}
-
-    public sealed interface ShouldAddFailure extends OperationFailureResult {}
-
-    public sealed interface ShouldRemoveFailure extends OperationFailureResult {}
-
-    public sealed interface AttachFailureResult extends OperationFailureResult {}
-
-    public sealed interface ParentConnectionFailure extends AttachFailureResult permits FailureResults.EdgeAlreadyExists, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexNotPresent {}
-
-    public sealed interface AddFailureResult extends OperationFailureResult {}
-
-    public sealed interface ChildAdditionFailure extends AddFailureResult permits FailureResults.EdgeAlreadyExists, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexAlreadyPresent, FailureResults.VertexNotPresent {}
-
-    public sealed interface ParentAdditionFailure extends AddFailureResult permits FailureResults.EdgeAlreadyExists, FailureResults.GraphCycleDetected, FailureResults.RejectedByGraphPolicy, FailureResults.RejectedByGraphValidation, FailureResults.RejectedByVertexPolicy, FailureResults.RejectedByVertexValidation, FailureResults.SelfReference, FailureResults.VertexAlreadyPresent, FailureResults.VertexNotPresent {}
 }

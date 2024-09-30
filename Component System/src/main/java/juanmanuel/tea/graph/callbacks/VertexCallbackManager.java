@@ -2,6 +2,8 @@ package juanmanuel.tea.graph.callbacks;
 
 import juanmanuel.tea.graph.Graph;
 import juanmanuel.tea.graph.Vertex;
+import juanmanuel.tea.graph.callbacks.vertex.GraphCallbackType;
+import juanmanuel.tea.graph.callbacks.vertex.VertexCallbackType;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -15,8 +17,8 @@ import java.util.function.Predicate;
  * @param <V> The type of the vertex over which the callbacks are performed.
  */
 public class VertexCallbackManager<V extends Vertex<V>> {
-    private WeakHashMap<BiConsumer<V, Graph<?, ?>>, EnumSet<Vertex.VertexCallbackType>> vertexCallbacks;
-    private WeakHashMap<Consumer<Graph<?, ?>>, EnumSet<Vertex.GraphCallbackType>> graphCallbacks;
+    private WeakHashMap<BiConsumer<V, Graph<?, ?>>, EnumSet<VertexCallbackType>> vertexCallbacks;
+    private WeakHashMap<Consumer<Graph<?, ?>>, EnumSet<GraphCallbackType>> graphCallbacks;
 
     private Set<BiConsumer<?, ?>> storedBiConsumerCallbacks;
     private Set<Consumer<?>> storedConsumerCallbacks;
@@ -27,11 +29,11 @@ public class VertexCallbackManager<V extends Vertex<V>> {
      * @param callback The callback to add.
      * @param type The type of operation that triggers the callback.
      */
-    public void addCallback(BiConsumer<V, Graph<?, ?>> callback, Vertex.VertexCallbackType type) {
+    public void addCallback(BiConsumer<V, Graph<?, ?>> callback, VertexCallbackType type) {
         if (vertexCallbacks == null)
             vertexCallbacks = new WeakHashMap<>();
 
-        var set = vertexCallbacks.computeIfAbsent(callback, _ -> EnumSet.noneOf(Vertex.VertexCallbackType.class));
+        var set = vertexCallbacks.computeIfAbsent(callback, _ -> EnumSet.noneOf(VertexCallbackType.class));
         set.add(type);
         vertexCallbacks.put(callback, set);
     }
@@ -42,11 +44,11 @@ public class VertexCallbackManager<V extends Vertex<V>> {
      * @param callback The callback to add.
      * @param type The type of operation that triggers the callback.
      */
-    public void addCallback(Consumer<Graph<?, ?>> callback, Vertex.GraphCallbackType type) {
+    public void addCallback(Consumer<Graph<?, ?>> callback, GraphCallbackType type) {
         if (graphCallbacks == null)
             graphCallbacks = new WeakHashMap<>();
 
-        var set = graphCallbacks.computeIfAbsent(callback, _ -> EnumSet.noneOf(Vertex.GraphCallbackType.class));
+        var set = graphCallbacks.computeIfAbsent(callback, _ -> EnumSet.noneOf(GraphCallbackType.class));
         set.add(type);
         graphCallbacks.put(callback, set);
     }
@@ -90,7 +92,7 @@ public class VertexCallbackManager<V extends Vertex<V>> {
         graphCallbacks.remove(callback);
     }
 
-    public void removeVertexCallback(BiConsumer<V, Graph<V, ?>> callback, Vertex.VertexCallbackType type) {
+    public void removeVertexCallback(BiConsumer<V, Graph<V, ?>> callback, VertexCallbackType type) {
         var set = vertexCallbacks.get(callback);
         if (set != null) {
             set.remove(type);
@@ -100,7 +102,7 @@ public class VertexCallbackManager<V extends Vertex<V>> {
         }
     }
 
-    public void removeGraphCallback(Consumer<Graph<V, ?>> callback, Vertex.GraphCallbackType type) {
+    public void removeGraphCallback(Consumer<Graph<V, ?>> callback, GraphCallbackType type) {
         var set = graphCallbacks.get(callback);
         if (set != null) {
             set.remove(type);
@@ -110,7 +112,7 @@ public class VertexCallbackManager<V extends Vertex<V>> {
         }
     }
 
-    public Set<BiConsumer<V, Graph<?, ?>>> getCallbacksFor(Vertex.VertexCallbackType type) {
+    public Set<BiConsumer<V, Graph<?, ?>>> getCallbacksFor(VertexCallbackType type) {
         Set<BiConsumer<V, Graph<?, ?>>> result = Collections.newSetFromMap(new WeakHashMap<>());
         for (var entry : vertexCallbacks.entrySet()) {
             if (entry.getValue().contains(type)) {
@@ -120,7 +122,7 @@ public class VertexCallbackManager<V extends Vertex<V>> {
         return result;
     }
 
-    public Set<Consumer<Graph<?, ?>>> getCallbacksFor(Vertex.GraphCallbackType type) {
+    public Set<Consumer<Graph<?, ?>>> getCallbacksFor(GraphCallbackType type) {
         Set<Consumer<Graph<?, ?>>> result = Collections.newSetFromMap(new WeakHashMap<>());
         for (var entry : graphCallbacks.entrySet()) {
             if (entry.getValue().contains(type)) {

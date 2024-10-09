@@ -13,7 +13,8 @@ class StructuredPhysicComputationTest {
     @Test
     void updater() {
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(() -> {});
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(() -> {
+        });
 
         assertEquals(updater.getClass(), computation.updaterClass());
     }
@@ -22,7 +23,7 @@ class StructuredPhysicComputationTest {
     void updated() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
 
         assertEquals(updated, computation.updated());
     }
@@ -30,26 +31,29 @@ class StructuredPhysicComputationTest {
     @Test
     void updaterClass() {
         var updater = new PhysicsUpdater();
-        assertEquals(PhysicsUpdater.class, updater.new StructuredPhysicComputation(() -> {}).updaterClass());
+        assertEquals(PhysicsUpdater.class, new PhysicsUpdater.StructuredPhysicComputation(() -> {
+        }).updaterClass());
     }
 
     @Test
     void updatedClass() {
         var updater = new PhysicsUpdater();
-        assertTrue(PhysicsUpdated.class.isAssignableFrom(updater.new StructuredPhysicComputation(() -> {}).updatedClass()));
+        assertTrue(PhysicsUpdated.class.isAssignableFrom(new PhysicsUpdater.StructuredPhysicComputation(() -> {
+        }).updatedClass()));
     }
 
     @Test
     void computationClass() {
         var updater = new PhysicsUpdater();
-        assertEquals(PhysicsUpdater.StructuredPhysicComputation.class, updater.new StructuredPhysicComputation(() -> {}).computationClass());
+        assertEquals(PhysicsUpdater.StructuredPhysicComputation.class, new PhysicsUpdater.StructuredPhysicComputation(() -> {
+        }).computationClass());
     }
 
     @Test
     void getComputation() {
         var updater = new PhysicsUpdater();
         var updated = (PhysicsUpdated) () -> {};
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         var otherUpdated = (PhysicsUpdated) () -> {};
 
         assertEquals(updated, computation.findOrNewComputation(updated).updated());
@@ -61,7 +65,7 @@ class StructuredPhysicComputationTest {
         AtomicBoolean up1 = new AtomicBoolean(false);
         var updater = new PhysicsUpdater();
         var updated = (PhysicsUpdated) () -> up1.set(!up1.get());
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
 
         computation.startComputationBy(updater);
         assertTrue(up1.get());
@@ -93,7 +97,7 @@ class StructuredPhysicComputationTest {
     void andThen() {
         var updater = new PhysicsUpdater();
         var updated = (PhysicsUpdated) () -> {};
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         var otherUpdated = (PhysicsUpdated) () -> {};
         var otherComputation = computation.andThen(otherUpdated);
 
@@ -105,7 +109,7 @@ class StructuredPhysicComputationTest {
     void onParallel() {
         var updater = new PhysicsUpdater();
         var updated = (PhysicsUpdated) () -> {};
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         var otherUpdated = (PhysicsUpdated) () -> {};
         var otherComputation = computation.onParallel(otherUpdated).orElseThrow(() -> new AssertionError("Should be present"));
 
@@ -122,7 +126,7 @@ class StructuredPhysicComputationTest {
     void updatedChildren() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         assertFalse(computation.updatedChildren().contains(updated));
 
         var otherUpdated = (PhysicsUpdated) () -> {};
@@ -134,7 +138,7 @@ class StructuredPhysicComputationTest {
     void updatedParents() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         assertTrue(computation.updatedParents().isEmpty());
     }
 
@@ -142,7 +146,7 @@ class StructuredPhysicComputationTest {
     void updatedDescendants() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         assertTrue(computation.updatedDescendants().isEmpty());
     }
 
@@ -150,7 +154,7 @@ class StructuredPhysicComputationTest {
     void updatedAncestors() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         assertTrue(computation.updatedAncestors().isEmpty());
     }
 
@@ -158,7 +162,7 @@ class StructuredPhysicComputationTest {
     void isUpdatedSequential() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         assertFalse(computation.isUpdatedAfter(updated));
     }
 
@@ -166,7 +170,7 @@ class StructuredPhysicComputationTest {
     void updatedGraph() {
         var updated = (PhysicsUpdated) () -> {};
         var updater = new PhysicsUpdater();
-        var computation = updater.new StructuredPhysicComputation(updated);
+        var computation = new PhysicsUpdater.StructuredPhysicComputation(updated);
         assertTrue(computation.updatedGraph().contains(updated));
     }
 

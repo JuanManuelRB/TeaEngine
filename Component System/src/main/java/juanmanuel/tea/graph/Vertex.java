@@ -5,6 +5,7 @@ import juanmanuel.tea.graph.callbacks.vertex.GraphCallbackType;
 import juanmanuel.tea.graph.callbacks.vertex.VertexCallbackType;
 import juanmanuel.tea.graph.operation_failures.FailureResults;
 import juanmanuel.tea.graph.operation_failures.vertex.*;
+import juanmanuel.tea.graph.policy.PolicyState;
 import juanmanuel.tea.graph.policy.VertexOperationsPolicies;
 import juanmanuel.tea.graph.validation.VertexOperationValidator;
 import juanmanuel.tea.utils.Result;
@@ -28,54 +29,52 @@ import static juanmanuel.tea.utils.Result.success;
 
 /// A vertex that can be used in a [Graph].
 /// @param <Self> The type of the vertex.
-@NullMarked
+@NullMarked @SuppressWarnings("unused")
 public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements GraphElement {
     /// The policies manager of this vertex.
-    /// This is used to manage the operations policies of the vertex.
-    /// The policies manager is created lazily.
-    @Nullable
-    protected VertexOperationsPolicies policiesManager;
+    ///
+    /// Manages the operations policies of the vertex.
+    ///
+    /// The policies manager is created lazily, access should be done through the
+    /// [policiesManager][#policiesManager()] method.
+    @Nullable protected VertexOperationsPolicies policiesManager;
 
     /// The validations manager of this vertex.
-    /// This is used to manage the operations validations of the vertex.
-    /// The validations manager is created lazily.
-    @Nullable
-    protected VertexOperationValidator<Self> validationsManager;
+    ///
+    /// Manages the operations validations of the vertex.
+    ///
+    /// The validations manager is created lazily, access should be done through the
+    /// [validationsManager][#validationsManager()] method.
+    @Nullable protected VertexOperationValidator<Self> validationsManager;
 
     /// The callbacks manager of this vertex.
+    ///
     /// This is used to manage the operations callbacks of the vertex.
-    /// The callbacks manager is created lazily.
-    @Nullable
-    protected VertexCallbackManager<Self> callbackManager;
+    ///
+    /// The callbacks manager is created lazily, access should be done through the [callbackManager][#callbacksManager()]
+    /// method.
+    @Nullable protected VertexCallbackManager<Self> callbacksManager;
 
-    /// Whether the policy should accept the operation when its state is UNSET.
+    /// Defines if the policy should accept the operation when its state is [UNSET][PolicyState].
     protected boolean acceptOnUnsetPolicy;
 
-    public static <V extends Vertex<V>, E extends ApplicationEdge> Set<V> verticesIn(Graph<V, E> graph) {
-        Objects.requireNonNull(graph);
-        return graph.vertexSet();
-    }
-
-    public static <V extends Vertex<V>, E extends ApplicationEdge> Set<E> edgesIn(Graph<V, E> graph) {
-        Objects.requireNonNull(graph);
-        return graph.edgeSet();
-    }
-
-    /// @return True if the policy should accept the operation when it is not set, false otherwise.
+    /// @return True if the operation should be accepted when the policy state is
+    /// [UNSET][PolicyState]
     public boolean acceptOnUnsetPolicy() {
         return acceptOnUnsetPolicy;
     }
 
+    /// Sets if the operation should be accepted when the policy state is
+    /// [UNSET][PolicyState].
     public void acceptOnUnsetPolicy(boolean acceptOnUnsetPolicy) {
         this.acceptOnUnsetPolicy = acceptOnUnsetPolicy;
     }
 
     /// Gets the policies manager of this vertex or creates it if it does not exist.
     /// @return The policies manager of this vertex.
-    VertexOperationsPolicies policiesManager() {
+    protected VertexOperationsPolicies policiesManager() {
         if (policiesManager == null)
             policiesManager = new VertexOperationsPolicies();
-
         return policiesManager;
     }
 
@@ -89,42 +88,16 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
 
     /// Gets the callbacks manager of this vertex or creates it if it does not exist.
     /// @return The callbacks manager of this vertex.
-    protected VertexCallbackManager<Self> callbackManager() {
-        if (callbackManager == null)
-            callbackManager = new VertexCallbackManager<>();
-
-        return callbackManager;
+    protected VertexCallbackManager<Self> callbacksManager() {
+        if (callbacksManager == null)
+            callbacksManager = new VertexCallbackManager<>();
+        return callbacksManager;
     }
 
     /// @return this vertex as a Self type.
     @SuppressWarnings("unchecked")
     protected Self self() {
         return (Self) this;
-    }
-
-    /// Checks if this vertex has the given vertex as a child.
-    /// @param child The vertex to check
-    /// @return true if the other vertex is a child of this vertex, false otherwise
-    public final boolean hasChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
-        Objects.requireNonNull(child);
-        Objects.requireNonNull(graph);
-
-        return graph.egressEdgesOf(self())
-                .stream()
-                .anyMatch(e -> graph.getEdgeTarget(e).equals(child));
-    }
-
-    /// Checks if this vertex has a child of the given type.
-    /// @param childClass The type of the vertex to check.
-    /// @return true if this vertex has a child of the given type, false otherwise
-    public final boolean hasChild(Class<? extends Self> childClass, Graph<? super Self, ApplicationEdge> graph) {
-        Objects.requireNonNull(childClass);
-        Objects.requireNonNull(graph);
-
-        return graph.egressEdgesOf(self())
-                .stream()
-                .map(graph::getEdgeTarget)
-                .anyMatch(childClass::isInstance);
     }
 
     /// Checks how many children of the given class this vertex has.
@@ -139,6 +112,67 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                 .map(graph::getEdgeTarget)
                 .filter(childClass::isInstance)
                 .count();
+    }
+
+    /// Checks how many parents of the given class this vertex has.
+    /// @param parentClass The class of the parents to check
+    /// @return The number of parents of the given class this GameObject has
+    public final long numberOfParents(Class<? extends Vertex<?>> parentClass, Graph<? super Self, ApplicationEdge> graph) {
+        Objects.requireNonNull(parentClass);
+        Objects.requireNonNull(graph);
+
+        return graph.ingressEdgesOf(self())
+                .stream()
+                .map(graph::getEdgeSource)
+                .filter(parentClass::isInstance)
+                .count();
+    }
+
+    /// Checks how many descendants of the given class this GameObject has.
+    /// @param descendantClass The class of the descendants to check
+    /// @return The number of descendants of the given class this GameObject has
+    public final long numberOfDescendants(Class<? extends Self> descendantClass, Graph<? super Self, ApplicationEdge> graph) {
+        Objects.requireNonNull(descendantClass);
+        Objects.requireNonNull(graph);
+
+        return graph.descendantsOf(self()).stream().filter(descendantClass::isInstance).count();
+    }
+
+    /// Checks how many ancestors of the given class this GameObject has.
+    /// @param ancestorClass The class of the ancestors to check
+    /// @return The number of ancestors of the given class this GameObject has
+    public final long numberOfAncestors(Class<? extends Vertex<?>> ancestorClass, Graph<? super Self, ApplicationEdge> graph) {
+        Objects.requireNonNull(ancestorClass);
+        Objects.requireNonNull(graph);
+
+        return graph.ancestorsOf(self()).stream().filter(ancestorClass::isInstance).count();
+    }
+
+    /// Checks if this vertex has the given vertex as a child.
+    /// @param child The vertex to check
+    /// @return true if the other vertex is a child of this vertex, false otherwise
+    public final boolean hasChild(Self child, Graph<? super Self, ApplicationEdge> graph) {
+        Objects.requireNonNull(child);
+        Objects.requireNonNull(graph);
+
+        return graph.egressEdgesOf(self())
+                .stream()
+                .anyMatch(e -> graph.getEdgeTarget(e)
+                        .map(o -> o.equals(child))
+                        .orElse(false));
+    }
+
+    /// Checks if this vertex has a child of the given type.
+    /// @param childClass The type of the vertex to check.
+    /// @return true if this vertex has a child of the given type, false otherwise
+    public final boolean hasChild(Class<?> childClass, Graph<Self, ApplicationEdge> graph) {
+        Objects.requireNonNull(childClass);
+        Objects.requireNonNull(graph);
+
+        return graph.egressEdgesOf(self())
+                .stream()
+                .map(graph::getEdgeTarget)
+                .anyMatch(childClass::isInstance);
     }
 
     /// Checks if this vertex has the given vertex as a parent.
@@ -171,20 +205,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                 .anyMatch(parentClass::isInstance);
     }
 
-    /// Checks how many parents of the given class this vertex has.
-    /// @param parentClass The class of the parents to check
-    /// @return The number of parents of the given class this GameObject has
-    public final long numberOfParents(Class<? extends Vertex<?>> parentClass, Graph<? super Self, ApplicationEdge> graph) {
-        Objects.requireNonNull(parentClass);
-        Objects.requireNonNull(graph);
-
-        return graph.ingressEdgesOf(self())
-                .stream()
-                .map(graph::getEdgeSource)
-                .filter(parentClass::isInstance)
-                .count();
-    }
-
     /**
      *
      * @param descendant The descendant to check
@@ -207,18 +227,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
         Objects.requireNonNull(graph);
 
         return graph.descendantsOf(self()).stream().anyMatch(descendantClass::isInstance);
-    }
-
-    /**
-     * Checks how many descendants of the given class this GameObject has.
-     * @param descendantClass The class of the descendants to check
-     * @return The number of descendants of the given class this GameObject has
-     */
-    public final long numberOfDescendants(Class<? extends Self> descendantClass, Graph<? super Self, ApplicationEdge> graph) {
-        Objects.requireNonNull(descendantClass);
-        Objects.requireNonNull(graph);
-
-        return graph.descendantsOf(self()).stream().filter(descendantClass::isInstance).count();
     }
 
     /**
@@ -246,18 +254,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     }
 
     /**
-     * Checks how many ancestors of the given class this GameObject has.
-     * @param ancestorClass The class of the ancestors to check
-     * @return The number of ancestors of the given class this GameObject has
-     */
-    public final long numberOfAncestors(Class<? extends Vertex<?>> ancestorClass, Graph<? super Self, ApplicationEdge> graph) {
-        Objects.requireNonNull(ancestorClass);
-        Objects.requireNonNull(graph);
-
-        return graph.ancestorsOf(self()).stream().filter(ancestorClass::isInstance).count();
-    }
-
-    /**
      *
      * @return true if this GameObject has children, false otherwise
      */
@@ -274,27 +270,27 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     }
 
     protected Set<BiConsumer<Self, Graph<?, ?>>> enterChildCallbacks() {
-        return callbackManager.getCallbacksFor(VertexCallbackType.ON_CONNECT_CHILD);
+        return callbacksManager().getCallbacksFor(VertexCallbackType.ON_CONNECT_CHILD);
     }
 
     protected Set<BiConsumer<Self, Graph<?, ?>>> enterParentCallbacks() {
-        return callbackManager.getCallbacksFor(VertexCallbackType.ON_CONNECT_PARENT);
+        return callbacksManager().getCallbacksFor(VertexCallbackType.ON_CONNECT_PARENT);
     }
 
     protected Set<BiConsumer<Self, Graph<?, ?>>> leaveChildCallbacks() {
-        return callbackManager.getCallbacksFor(VertexCallbackType.ON_DISCONNECT_CHILD);
+        return callbacksManager().getCallbacksFor(VertexCallbackType.ON_DISCONNECT_CHILD);
     }
 
     protected Set<BiConsumer<Self, Graph<?, ?>>> leaveParentCallbacks() {
-        return callbackManager.getCallbacksFor(VertexCallbackType.ON_DISCONNECT_PARENT);
+        return callbacksManager().getCallbacksFor(VertexCallbackType.ON_DISCONNECT_PARENT);
     }
 
     protected Set<Consumer<Graph<?, ?>>> enterGraphCallbacks() {
-        return callbackManager.getCallbacksFor(GraphCallbackType.ON_ENTER_GRAPH);
+        return callbacksManager().getCallbacksFor(GraphCallbackType.ON_ENTER_GRAPH);
     }
 
     protected Set<Consumer<Graph<?, ?>>> leaveGraphCallbacks() {
-        return callbackManager.getCallbacksFor(GraphCallbackType.ON_LEAVE_GRAPH);
+        return callbacksManager().getCallbacksFor(GraphCallbackType.ON_LEAVE_GRAPH);
     }
 
     /**
@@ -303,7 +299,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      */
     public final void addOnConnectChildCallback(BiConsumer<Self, Graph<?, ?>> callback) {
         Objects.requireNonNull(callback);
-        callbackManager.addCallback(callback, VertexCallbackType.ON_CONNECT_CHILD);
+        callbacksManager().addCallback(callback, VertexCallbackType.ON_CONNECT_CHILD);
     }
 
     /**
@@ -312,7 +308,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      */
     public final void addOnConnectParentCallback(BiConsumer<Self, Graph<?, ?>> callback) {
         Objects.requireNonNull(callback);
-        callbackManager.addCallback(callback, VertexCallbackType.ON_CONNECT_PARENT);
+        callbacksManager().addCallback(callback, VertexCallbackType.ON_CONNECT_PARENT);
     }
 
     /**
@@ -321,7 +317,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      */
     public final void addOnLeaveChildCallback(BiConsumer<Self, Graph<?, ?>> callback) {
         Objects.requireNonNull(callback);
-        callbackManager.addCallback(callback, VertexCallbackType.ON_DISCONNECT_CHILD);
+        callbacksManager().addCallback(callback, VertexCallbackType.ON_DISCONNECT_CHILD);
     }
 
     /**
@@ -330,17 +326,17 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
      */
     public final void addOnLeaveParentCallback(BiConsumer<Self, Graph<?, ?>> callback) {
         Objects.requireNonNull(callback);
-        callbackManager.addCallback(callback, VertexCallbackType.ON_DISCONNECT_PARENT);
+        callbacksManager().addCallback(callback, VertexCallbackType.ON_DISCONNECT_PARENT);
     }
 
     public final void addOnEnterGraphCallback(Consumer<Graph<?, ?>> callback) {
         Objects.requireNonNull(callback);
-        callbackManager.addCallback(callback, GraphCallbackType.ON_ENTER_GRAPH);
+        callbacksManager().addCallback(callback, GraphCallbackType.ON_ENTER_GRAPH);
     }
 
     public final void addOnExitGraphCallback(Consumer<Graph<?, ?>> callback) {
         Objects.requireNonNull(callback);
-        callbackManager.addCallback(callback, GraphCallbackType.ON_LEAVE_GRAPH);
+        callbacksManager().addCallback(callback, GraphCallbackType.ON_LEAVE_GRAPH);
     }
 
     /**
@@ -582,29 +578,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
 
             case Result.Success<Void, Graph.ShouldRemoveVertexFailure> _ -> success();
         };
-
-//        return switch (shouldDisconnectChild(child, graph)) {
-//            case Failure<?, ShouldDisconnectChildFailure>(Vertex.ShouldDisconnectChildFailure cause) -> switch (cause) {
-//                case RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
-//                case RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
-//                case RejectedByGraphPolicy rejectedByGraphPolicy -> fail(rejectedByGraphPolicy);
-//                case RejectedByGraphValidation rejectedByGraphValidation -> fail(rejectedByGraphValidation);
-//                case VertexNotPresent vertexNotPresentInTheGraph -> fail(vertexNotPresentInTheGraph);
-//                case EdgeNotPresentInGraph edgeNotPresentInGraph -> fail(edgeNotPresentInGraph);
-//                case SelfReference selfReference -> fail(selfReference);
-//            };
-//
-//            case Success<Void, ?> _ -> switch (graph.shouldRemoveVertex(child)) {
-//                case Failure<Void, Graph.ShouldRemoveVertexFailure>(var f) -> switch (f) {
-//                    case RejectedByGraphPolicy rejectedByGraphPolicy -> fail(rejectedByGraphPolicy);
-//                    case RejectedByGraphValidation rejectedByGraphValidation -> fail(rejectedByGraphValidation);
-//                    case RejectedByVertexPolicy rejectedByVertexPolicy -> fail(rejectedByVertexPolicy);
-//                    case RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
-//                    case VertexNotPresent vertexNotPresent -> fail(vertexNotPresent);
-//                };
-//                case Result.Success<Void, Graph.ShouldRemoveVertexFailure> _ -> success();
-//            };
-//        };
     }
 
     /**
@@ -945,7 +918,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
             case Result.Success<ApplicationEdge, Graph.EdgeRemovalFailure>(var e) -> {
                 try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
                     scope.fork(() -> {
-                        switch (policiesManager.stateOf(ON_DISCONNECT_CHILD_POLICY, child)) {
+                        switch (policiesManager().stateOf(ON_DISCONNECT_CHILD_POLICY, child)) {
                             case ACCEPT -> this.onDisconnectChild(child, graph);
                             case UNSET -> {
                                 if (acceptOnUnsetPolicy())
@@ -957,7 +930,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                     });
 
                     scope.fork(() -> {
-                        switch (child.policiesManager.stateOf(ON_DISCONNECT_PARENT_POLICY, this)) {
+                        switch (child.policiesManager().stateOf(ON_DISCONNECT_PARENT_POLICY, this)) {
                             case ACCEPT -> child.onDisconnectParent(self(), graph);
                             case UNSET -> {
                                 if (child.acceptOnUnsetPolicy())
@@ -1012,7 +985,7 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
                     });
 
                     scope.fork(() -> {
-                        switch (policiesManager.stateOf(ON_DISCONNECT_PARENT_POLICY, parent)) {
+                        switch (policiesManager().stateOf(ON_DISCONNECT_PARENT_POLICY, parent)) {
                             case ACCEPT -> onDisconnectParent(parent, graph);
                             case UNSET -> {
                                 if (acceptOnUnsetPolicy())
@@ -1037,7 +1010,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @param graph
     /// @return
     /// @throws IllegalStateException
-    /// @throws InterruptedException
     @SuppressWarnings("unchecked")
     protected <T extends Vertex<T>> Result<Self, ChildRemovalFailure> handleChildRemoval(Self child, Graph<? super Self, ApplicationEdge> graph)
             throws IllegalStateException {
@@ -1066,7 +1038,6 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
     /// @param parent
     /// @param graph
     /// @return
-    /// @throws InterruptedException
     /// @throws IllegalStateException
     @SuppressWarnings("unchecked")
     private Result<Self, ParentRemovalFailure> handleParentRemoval(Self parent, Graph<? super Self, ApplicationEdge> graph)
@@ -1371,12 +1342,12 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
 
     public boolean shouldCallOnEnterGraphFor(Graph<?, ?> graph) {
         return policiesManager().stateOf(ON_ENTER_GRAPH_POLICY, graph) == ACCEPT
-                || (acceptOnUnsetPolicy() && policiesManager.stateOf(ON_ENTER_GRAPH_POLICY, graph) == UNSET);
+                || (acceptOnUnsetPolicy() && policiesManager().stateOf(ON_ENTER_GRAPH_POLICY, graph) == UNSET);
     }
 
     public boolean shouldCallOnLeaveGraphFor(Graph<?, ?> graph) {
         return policiesManager().stateOf(ON_LEAVE_GRAPH_POLICY, graph) == ACCEPT
-                || (acceptOnUnsetPolicy() && policiesManager.stateOf(ON_LEAVE_GRAPH_POLICY, graph) == UNSET);
+                || (acceptOnUnsetPolicy() && policiesManager().stateOf(ON_LEAVE_GRAPH_POLICY, graph) == UNSET);
     }
 
     public <V2 extends Vertex<V2>> boolean shouldCallOnDisconnectChildFor(V2 v) {
@@ -1629,166 +1600,15 @@ public abstract non-sealed class Vertex<Self extends Vertex<Self>> implements Gr
         return graph.shortestVertexPathBetween((Self) this, target);
     }
 
-    @SuppressWarnings("unchecked")
     public final <E extends ApplicationEdge> SequencedCollection<Self> shortestPathFrom(Self source, Graph<Self, E> graph) {
         Objects.requireNonNull(graph);
-        if (!graph.containsVertex((Self) this) || !graph.containsVertex(source))
+        if (!graph.containsVertex(self()) || !graph.containsVertex(source))
             return List.of();
 
-        return graph.shortestVertexPathBetween(source, (Self) this);
+        return graph.shortestVertexPathBetween(source, self());
     }
 
 
-    //    @SuppressWarnings("unchecked")
-//    public final Result<Set<E>, GraphModificationException> disconnectChildren() {
-//        Set<E> edges = new HashSet<>();
-//        assert graph().isPresent();
-//        for (Self child : children()) {
-//            var e = graph().get().edgeOf((Self) this, child).orElse(null); // TODO: REFACTOR
-//            disconnectChild(child).ifPresent(_ -> edges.add(e));
-//        }
-//        return Result.of(edges);
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    public final Result<Set<E>, GraphModificationException> disconnectParents() {
-//        Set<E> edges = new HashSet<>();
-//        assert graph().isPresent();
-//        for (Self parent : parents()) {
-//            var e = graph().get().edgeOf(parent, (Self) this).orElse(null); // TODO: REFACTOR
-//            disconnectParent(parent).ifPresent(_ -> edges.add(e));
-//        }
-//        return Result.of(edges);
-//    }
-
-
-//    public final Result<Set<ApplicationEdge<Self>>, DisconnectFailureResult> disconnectAll() { // TODO: Refactor into smaller methods
-//        Set<ApplicationEdge<Self>> edges = new HashSet<>();
-//        var children = children();
-//        var parents = parents();
-//
-//        Set<Self> shouldDisconnectChild = new HashSet<>();
-//        Set<Self> shouldDisconnectParent = new HashSet<>();
-//        for (Self child : children)
-//            switch (shouldDisconnectChild(child)) {
-//                case Failure<?, ShouldDisconnectChildFailure>(var cause) -> {
-//                    return switch (cause) {
-//                        case EdgeNotPresent edgeNotPresent -> fail(edgeNotPresent);
-//                        case GraphDoesNotExist graphDoesNotExist -> fail(graphDoesNotExist);
-//                        case RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
-//                        case SelfReference selfReference -> fail(selfReference);
-//                        case VertexDoesNotExist vertexDoesNotExist -> fail(vertexDoesNotExist);
-//                        case ApplicationVertex.RejectedByGraphValidation rejectedByGraphValidation -> fail(rejectedByGraphValidation);
-//                    };
-//                }
-//
-//                case Success<Void, ?> _ -> shouldDisconnectChild.add(child);
-//            }
-//
-//        for (Self parent : parents)
-//            switch (shouldDisconnectParent(parent)) {
-//                case Failure<?, ShouldDisconnectParentFailure>(var cause) -> {
-//                    return switch (cause) {
-//                        case EdgeNotPresent edgeNotPresent -> fail(edgeNotPresent);
-//                        case GraphDoesNotExist graphDoesNotExist -> fail(graphDoesNotExist);
-//                        case RejectedByVertexValidation rejectedByVertexValidation -> fail(rejectedByVertexValidation);
-//                        case SelfReference selfReference -> fail(selfReference);
-//                        case VertexDoesNotExist vertexDoesNotExist -> fail(vertexDoesNotExist);
-//                        case ApplicationVertex.RejectedByGraphValidation rejectedByGraphValidation -> fail(rejectedByGraphValidation);
-//                    };
-//                }
-//
-//                case Success<Void, ?> _ -> shouldDisconnectParent.add(parent);
-//            }
-//
-//        assert graph().isPresent();
-//        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-//            Set<StructuredTaskScope.Subtask<ApplicationEdge<Self>>> tasks = new HashSet<>();
-//            var thiz = (Self) this;
-//            for (Self child : shouldDisconnectChild)
-//                tasks.add(scope.fork(() -> {
-//                    var e = graph().get().removeEdge(thiz, child);
-//
-//                    if (e != null)
-//                        edges.add(e);
-//
-//                    scope.fork(() -> {
-//                        if (policiesManager.stateOf(ON_DISCONNECT_CHILD_POLICY, child) == ACCEPT)
-//                            this.onDisconnectChild(child);
-//                        return null;
-//                    });
-//
-//                    scope.fork(() -> {
-//                        if(child.policiesManager.stateOf(ON_DISCONNECT_PARENT_POLICY, thiz) == ACCEPT)
-//                            child.onDisconnectParent(thiz);
-//                        return null;
-//                    });
-//                    scope.join();
-//                    return e;
-//                }));
-//
-//            for (Self parent : shouldDisconnectParent)
-//                tasks.add(scope.fork(() -> {
-//                    var e = graph().get().removeEdge(parent, thiz);
-//
-//                    if (e != null)
-//                        edges.add(e);
-//
-//                    scope.fork(() -> {
-////                        if (shouldCallOnLeaveParentFor(parent))
-//                        if (policiesManager.stateOf(ON_DISCONNECT_PARENT_POLICY, parent) == ACCEPT)
-//                            this.onDisconnectParent(parent);
-//                        return null;
-//                    });
-//
-//                    scope.fork(() -> {
-////                        if (parent.shouldCallOnLeaveChildFor(thiz))
-//                        if (parent.policiesManager.stateOf(ON_DISCONNECT_CHILD_POLICY, thiz) == ACCEPT)
-//                            parent.onDisconnectChild(thiz);
-//                        return null;
-//                    });
-//                    return e;
-//                }));
-//            scope.join();
-//            tasks.stream().map(StructuredTaskScope.Subtask::get).forEach(edges::add);
-//
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return success(edges);
-//    }
-
-//
-//    private Result<ApplicationEdge, ShouldReplaceEdgeResult> shouldReplaceEdge(Self targetConnectedVertex, Self connectionReplacementVertex) {
-//        return null; // TODO: Implement
-//    }
-
-//
-//    private Result<E, ComponentOperationFailure> handleEdgeReplacement(Self to, Self with, double weightToReplacement, double weightReplacementToOther) {
-//        return null;
-//    }
-//
-//    /**
-//     * Replaces the edge between the current node and the given child node with the given vertex.
-//     * The connectivity of this vertex and the other vertex is preserved, with the replacing vertex taking the place of the
-//     * existing edge and being connected to both vertices preserving directionality.
-//     *
-//     * @param to The connected vertex to replace the edge to.
-//     * @param with The vertex to replace the edge with.
-//     * @return A Result indicating the outcome of the replacement attempt. This can be:
-//     *        - A Present Result containing the replacement vertex if the operation was successful.
-//     *        - An Absent Result if the operation was not successful.
-//     *        - A Failure Result with a GraphModificationException if there was an issue with the replacement.
-//     */
-//    public Result<Self, ComponentOperationFailure> replaceConnection(Self to, Self with, double weightToReplacement, double weightReplacementToOther) {
-//        return null;
-//    }
-//
-//
-//    public Result<Self, ComponentOperationFailure> replaceConnection(Self to, Self with) {
-//        return null;
-//    }
-//
 //    /**
 //     * Preserves this object and contracts the given child node to this node.
 //     * If the child node has other parents, the operation is only successful if those parents can be added as parents of

@@ -13,6 +13,8 @@ import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.jgrapht.graph.GraphCycleProhibitedException;
 import org.jgrapht.graph.GraphSpecificsStrategy;
 import org.jgrapht.util.SupplierUtil;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.StructuredTaskScope;
@@ -45,10 +47,11 @@ import static juanmanuel.tea.utils.Result.success;
  * Does not allow duplicate vertices or edges.
  * Does not allow null vertices or edges.
  */
+@NullMarked
 public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> implements GraphElement {
     protected final DirectedAcyclicGraph<V, E> graph;
-    final protected GraphOperationValidator<V> validationsManager = new GraphOperationValidator<>();
-    final GraphOperationsPolicies policiesManager = new GraphOperationsPolicies();
+    @Nullable GraphOperationValidator<V> validationsManager;
+    @Nullable GraphOperationsPolicies policiesManager;
     private final Map<?, Consumer<V>> addVertexCallbacks = new HashMap<>();
     private final Map<?, Consumer<V>> removeVertexCallbacks = new HashMap<>();
     private final Map<?, BiConsumer<V, V>> addEdgeCallbacks = new HashMap<>();
@@ -84,18 +87,30 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
     }
 
     public Set<E> egressEdgesOf(V v) {
-        return graph.outgoingEdgesOf(v);
+        try {
+            return graph.outgoingEdgesOf(v);
+        } catch (IllegalArgumentException e) {
+            return new HashSet<>();
+        }
     }
 
     public Set<E> ingressEdgesOf(V v) {
-        return graph.incomingEdgesOf(v);
+        try {
+            return graph.incomingEdgesOf(v);
+        } catch (IllegalArgumentException e) {
+            return new HashSet<>();
+        }
     }
 
     public GraphOperationsPolicies policiesManager() {
+        if (policiesManager == null)
+            policiesManager = new GraphOperationsPolicies();
         return policiesManager;
     }
 
     public GraphOperationValidator<V> validationsManager() {
+        if (validationsManager == null)
+            validationsManager = new GraphOperationValidator<>();
         return validationsManager;
     }
 
@@ -131,7 +146,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
             }
         }
 
-        if (!validationsManager.validateOperation(ADD_VERTEX_VALIDATION, v))
+        if (!validationsManager().validateOperation(ADD_VERTEX_VALIDATION, v))
             return fail(new FailureResults.RejectedByGraphValidation("The graph validation rejected the vertex addition", this));
 
         switch (v.policiesManager().stateOf(ADD_TO_GRAPH_POLICY, this)) {
@@ -195,7 +210,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
         if (!containsVertex(v))
             return fail(new FailureResults.VertexNotPresent("The vertex is not present in the graph", v));
 
-        switch (policiesManager.stateOf(REMOVE_VERTEX_POLICY, v)) {
+        switch (policiesManager().stateOf(REMOVE_VERTEX_POLICY, v)) {
             case ACCEPT -> {}
             case REJECT -> {
                 return fail(new FailureResults.RejectedByGraphPolicy("The graph policy rejected the vertex removal", this));
@@ -206,7 +221,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
             }
         }
 
-        if (!validationsManager.validateOperation(REMOVE_VERTEX_VALIDATION, v))
+        if (!validationsManager().validateOperation(REMOVE_VERTEX_VALIDATION, v))
             return fail(new FailureResults.RejectedByGraphValidation("The graph validation rejected the vertex removal", this));
 
         var paResStr = parentsOf(v)
@@ -717,9 +732,9 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
      * @return A result indicating if the edge can be added or not.
      */
     protected Result<Void, ShouldAddEdgeFailure> edgeAdditionOperationCheck(V source, V target) {
-        switch (policiesManager.stateOf(CREATE_EDGE_POLICY, source, target)) {
+        switch (policiesManager().stateOf(CREATE_EDGE_POLICY, source, target)) {
             case ACCEPT -> {
-                if (!validationsManager.validateOperation(CREATE_EDGE_VALIDATION, source, target))
+                if (!validationsManager().validateOperation(CREATE_EDGE_VALIDATION, source, target))
                     return fail(new FailureResults.RejectedByGraphPolicy("The graph validation rejected the edge addition", this));
             }
             case REJECT -> {
@@ -753,7 +768,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
             }
         }
 
-        if (!validationsManager.validateOperation(CREATE_EDGE_VALIDATION, source, target))
+        if (!validationsManager().validateOperation(CREATE_EDGE_VALIDATION, source, target))
             return fail(new FailureResults.RejectedByGraphValidation("The graph validation rejected the edge addition", this));
 
         switch (source.validationsManager().validateOperation(CONNECT_CHILD_VALIDATION, target)) {
@@ -845,7 +860,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
                     return null;
                 });
 
-            if (policiesManager.stateOf(ON_ADD_EDGE_POLICY, source, target) == ACCEPT)
+            if (policiesManager().stateOf(ON_ADD_EDGE_POLICY, source, target) == ACCEPT)
                 scope.fork(() -> {
                     onConnect(source, target);
                     return null;
@@ -878,7 +893,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
         if (!containsEdge(source, target))
             return fail(new FailureResults.EdgeNotPresent("The edge is not present in the graph"));
 
-        switch (policiesManager.stateOf(REMOVE_EDGE_POLICY, source, target)) {
+        switch (policiesManager().stateOf(REMOVE_EDGE_POLICY, source, target)) {
             case REJECT -> {
                 return fail(new FailureResults.RejectedByGraphPolicy("The graph policy rejected the edge removal", this));
             }
@@ -911,7 +926,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
             }
         }
 
-        if (!validationsManager.validateOperation(REMOVE_EDGE_VALIDATION, source, target))
+        if (!validationsManager().validateOperation(REMOVE_EDGE_VALIDATION, source, target))
             return fail(new FailureResults.RejectedByGraphValidation("Edge removal rejected by the graph validation", this));
 
         switch (source.validationsManager().validateOperation(DISCONNECT_CHILD_VALIDATION, target)) {
@@ -966,7 +981,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
                             return null;
                         });
 
-                    if (policiesManager.stateOf(ON_ADD_EDGE_POLICY, source, target) == ACCEPT)
+                    if (policiesManager().stateOf(ON_ADD_EDGE_POLICY, source, target) == ACCEPT)
                         scope.fork(() -> {
                             onDisconnect(source, target);
                             return null;
@@ -1029,7 +1044,7 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
                     return null;
                 });
 
-            if (policiesManager.stateOf(ON_ADD_EDGE_POLICY, source, target) == ACCEPT)
+            if (policiesManager().stateOf(ON_ADD_EDGE_POLICY, source, target) == ACCEPT)
                 scope.fork(() -> {
                     onDisconnect(source, target);
                     return null;
@@ -1059,22 +1074,22 @@ public non-sealed class Graph<V extends Vertex<V>, E extends ApplicationEdge> im
 
     protected void addEnterVertexValidation(Predicate<V> predicate) {
         Objects.requireNonNull(predicate);
-        validationsManager.addValidationForOperation(ADD_VERTEX_VALIDATION, predicate);
+        validationsManager().addValidationForOperation(ADD_VERTEX_VALIDATION, predicate);
     }
 
     protected void addLeaveVertexValidation(Predicate<V> predicate) {
         Objects.requireNonNull(predicate);
-        validationsManager.addValidationForOperation(REMOVE_VERTEX_VALIDATION, predicate);
+        validationsManager().addValidationForOperation(REMOVE_VERTEX_VALIDATION, predicate);
     }
 
     protected void addCreateEdgeValidation(BiPredicate<V, V> predicate) {
         Objects.requireNonNull(predicate);
-        validationsManager.addValidationForOperation(CREATE_EDGE_VALIDATION, predicate);
+        validationsManager().addValidationForOperation(CREATE_EDGE_VALIDATION, predicate);
     }
 
     protected void addRemoveEdgeValidation(BiPredicate<V, V> predicate) {
         Objects.requireNonNull(predicate);
-        validationsManager.addValidationForOperation(REMOVE_EDGE_VALIDATION, predicate);
+        validationsManager().addValidationForOperation(REMOVE_EDGE_VALIDATION, predicate);
     }
 
     protected void onEnterVertex(V v) throws RuntimeException {}

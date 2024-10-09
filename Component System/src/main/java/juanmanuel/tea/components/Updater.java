@@ -2,14 +2,14 @@ package juanmanuel.tea.components;
 
 import juanmanuel.tea.graph.ApplicationEdge;
 import juanmanuel.tea.graph.Graph;
+import org.jspecify.annotations.NullMarked;
 
-/**
- * Holds the logic to update an object contained in a computation. And organizes the computations of the updated objects
- * in a graph.
- * @param <Self> The updater class
- * @param <Upd> The updated class
- * @param <SC> The structured computation class
- */
+/// Holds the logic to update an object contained in a computation. And organizes the computations of the updated objects
+/// in a graph.
+/// @param <Self> The updater class
+/// @param <Upd> The updated class
+/// @param <SC> The structured computation class
+@NullMarked
 public interface Updater<
         Self extends Updater<Self, Upd, SC>,
         Upd extends Updated,
@@ -35,7 +35,6 @@ public interface Updater<
     ///
     /// If the computation does not exist, it is not added to the graph.
     ///
-    /// TODO: Adds the computation to the graph if it does not exist?
     /// @param updated The updated object
     /// @return The computation of the updated object
     SC computationOf(Upd updated);

@@ -58,7 +58,11 @@ public final class VertexOperationsPolicies {
                                     .getOrDefault(graphElement.getClass(), PolicyState.UNSET));
 
             case OBJECT_OR_TYPE -> unaryObjectPolicyStateMap == null
-                    ? PolicyState.UNSET
+                    ? PolicyState.UNSET.or(unaryTypePolicyStateMap == null
+                        ? PolicyState.UNSET
+                        : unaryTypePolicyStateMap
+                            .getOrDefault(unaryPolicy, new HashMap<>())
+                            .getOrDefault(graphElement.getClass(), PolicyState.UNSET))
                     : unaryObjectPolicyStateMap
                         .getOrDefault(unaryPolicy, new WeakHashMap<>())
                         .getOrDefault(graphElement, PolicyState.UNSET)
@@ -87,6 +91,42 @@ public final class VertexOperationsPolicies {
                     .getOrDefault(graphElementType, PolicyState.UNSET);
 
         return PolicyState.UNSET;
+    }
+
+    public <P extends VertexPolicy & Policy.NullaryPolicy> boolean isAccepted(P nullaryPolicy) {
+        return stateOf(nullaryPolicy) == PolicyState.ACCEPT;
+    }
+
+    public <P extends VertexPolicy & Policy.NullaryPolicy> boolean isRejected(P nullaryPolicy) {
+        return stateOf(nullaryPolicy) == PolicyState.REJECT;
+    }
+
+    public <P extends VertexPolicy & Policy.NullaryPolicy> boolean isUnset(P nullaryPolicy) {
+        return stateOf(nullaryPolicy) == PolicyState.UNSET;
+    }
+
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> boolean isAccepted(P unaryPolicy, G graphElement) {
+        return stateOf(unaryPolicy, graphElement) == PolicyState.ACCEPT;
+    }
+
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> boolean isRejected(P unaryPolicy, G graphElement) {
+        return stateOf(unaryPolicy, graphElement) == PolicyState.REJECT;
+    }
+
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> boolean isUnset(P unaryPolicy, G graphElement) {
+        return stateOf(unaryPolicy, graphElement) == PolicyState.UNSET;
+    }
+
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> boolean isAccepted(P unaryPolicy, Class<G> graphElementType) {
+        return stateOf(unaryPolicy, graphElementType) == PolicyState.ACCEPT;
+    }
+
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> boolean isRejected(P unaryPolicy, Class<G> graphElementType) {
+        return stateOf(unaryPolicy, graphElementType) == PolicyState.REJECT;
+    }
+
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> boolean isUnset(P unaryPolicy, Class<G> graphElementType) {
+        return stateOf(unaryPolicy, graphElementType) == PolicyState.UNSET;
     }
 
     public <P extends VertexPolicy & Policy.NullaryPolicy> void accept(P nullaryPolicy) {
@@ -131,14 +171,14 @@ public final class VertexOperationsPolicies {
         unaryObjectPolicyStateMap.computeIfAbsent(unaryPolicy, _ -> new WeakHashMap<>()).put(graphElement, PolicyState.UNSET);
     }
 
-    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void accept(P unaryPolicy, Class<G> graphElementType) {
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void accept(P unaryPolicy, Class<? extends G> graphElementType) {
         if (unaryTypePolicyStateMap == null)
             unaryTypePolicyStateMap = new HashMap<>();
 
         unaryTypePolicyStateMap.computeIfAbsent(unaryPolicy, _ -> new HashMap<>()).put(graphElementType, PolicyState.ACCEPT);
     }
 
-    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void reject(P unaryPolicy, Class<G> graphElementType) {
+    public <P extends VertexPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void reject(P unaryPolicy, Class<? extends G> graphElementType) {
         if (unaryTypePolicyStateMap == null)
             unaryTypePolicyStateMap = new HashMap<>();
 

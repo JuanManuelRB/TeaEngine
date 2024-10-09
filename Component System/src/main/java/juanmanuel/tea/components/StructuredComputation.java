@@ -8,7 +8,6 @@ import juanmanuel.tea.graph.operation_failures.vertex.ChildAdditionFailure;
 import juanmanuel.tea.graph.operation_failures.vertex.ChildDisconnectionFailure;
 import juanmanuel.tea.graph.operation_failures.vertex.ParentAdditionFailure;
 import juanmanuel.tea.graph.operation_failures.vertex.ParentDisconnectionFailure;
-import juanmanuel.tea.graph.validation.VertexOperationValidator;
 import juanmanuel.tea.utils.Result;
 import org.jspecify.annotations.NullMarked;
 
@@ -18,12 +17,16 @@ import java.util.concurrent.StructuredTaskScope;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/**
- * Represents a computation that can be executed by an Updater. It is a graph of UpdaterComputation objects.
- * @param <Upr> The type of the Updater that can execute the updated object.
- * @param <Upd> The type of the Updated object that is computed.
- * @param <Self> The type of the UpdaterComputation.
- */
+/// Represents a computation that can be executed by an Updater.
+///
+/// This class is a vertex that an associated Updater can handle. The updater is responsible for providing a graph that
+/// stores the vertices.
+///
+/// This class does not have any logic to update the updated object. The logic to update the object is contained in the Updater
+/// class.
+/// @param <Upr> The type of the Updater that can execute the updated object.
+/// @param <Upd> The type of the Updated object that is computed.
+/// @param <Self> The type of the UpdaterComputation.
 @NullMarked
 public abstract class StructuredComputation <
         Upr extends Updater<Upr, Upd, Self>,
@@ -45,15 +48,19 @@ public abstract class StructuredComputation <
         this.updated = updated;
         this.semaphore = new Semaphore(concurrentComputations);
 
-        validationsManager()
-                .addOperationValidation(
-                        VertexOperationValidator.VerticesOperationValidation.CONNECT_CHILD_VALIDATION,
-                        other -> isEquivalent(other) ? Result.success(null) : Result.fail(null)
-                );
+//        validationsManager() // TODO
+//                .addOperationValidation(
+//                        VertexOperationValidator.VerticesOperationValidation.CONNECT_CHILD_VALIDATION,
+//                        other -> isEquivalent(other) ? Result.success(null) : Result.fail(null) // FIXME: failure cannot be null
+//                );
     }
 
     public StructuredComputation(Class<Upr> updaterClass, Upd updated) {
         this(updaterClass, updated, 1);
+    }
+
+    protected Map<StructuredComputation<Upr, Upd, Self>, Boolean> previousComputations() {
+        return previousComputations;
     }
 
     public Upd updated() {
@@ -164,17 +171,14 @@ public abstract class StructuredComputation <
 //                .findFirst();
 //    }
 
-    /**
-     * This method is used to start the computation of this StructuredComputation's Updated object, with the given Updater.
-     * It first calls the onStartCompute method, which prepares the computation and checks if it can be started.
-     * If the onStartCompute method throws an InterruptedException and there are queued threads, the method returns without starting the computation. TBD
-     * If the onStartCompute method throws an InterruptedException and there are no queued threads, the InterruptedException is rethrown.
-     * If the onStartCompute method does not throw an InterruptedException, the computation is started by calling the computeBy method with the given Updater.
-     * After the computation is finished, the onFinishCompute method is called to clean up and notify other computations that this computation has finished.
-     *
-     * @param updater The Updater object that is executing this StructuredComputation's computation.
-     * @throws InterruptedException If the computation is interrupted while waiting for the semaphore to be released.
-     */
+    /// This method is used to start the computation of this StructuredComputation's Updated object, with the given Updater.
+    ///
+    /// This method is intended to be the entry point to compute the graph.
+    ///
+    ///
+    ///
+    /// @param updater The Updater object that is executing this StructuredComputation's computation.
+    /// @throws InterruptedException If the computation is interrupted while waiting for the semaphore to be released.
     public final void startComputationBy(Upr updater) throws InterruptedException {
         // TODO: Add a way to cancel the computation
         // TODO: Add a way to check if the computation is already running
@@ -186,12 +190,10 @@ public abstract class StructuredComputation <
         semaphore.release();
     }
 
-    /**
-     * Realizes the computation of this StructuredComputation's Updated, with the given Updater.
-     * @param updater The Updater object that is executing this StructuredComputation's computation.
-     */
+    /// Performs the computation of this StructuredComputation's Updated, with the given Updater.
+    /// @param updater The Updater object that is executing this StructuredComputation's computation.
     public void computeBy(Upr updater) {
-        updater.update(updated);
+        updater.update(self());
     }
 
     /// This method is called before the computation starts. It performs these tasks:
@@ -506,40 +508,19 @@ public abstract class StructuredComputation <
     }
 
     protected void onChildComputeStarts(Self child, Upr updater) {
-        if (!this.hasChild(child, updater.graph()))
-            throw new IllegalArgumentException("Child not found");
+
     }
 
     protected void onParentComputeStarts(Self parent, Upr updater) {
-        if (!this.hasParent(parent, updater.graph()))
-            throw new IllegalArgumentException("Parent not found");
 
-        previousComputations.put(parent, false);
     }
 
     protected void onChildComputeFinished(Self child, Upr updater) {
-        if (!this.hasChild(child, updater.graph()))
-            throw new IllegalArgumentException("Child not found");
+
     }
 
     protected void onParentComputeFinished(Self parent, Upr updater) {
-        if (!this.hasParent(parent, updater.graph()))
-            throw new IllegalArgumentException("Parent not found");
 
-        previousComputations.put(parent, true);
-        startComputeIfReady(self(), updater);
-    }
-
-    protected final void startComputeIfReady(Self computation, Upr updater) {
-        if (computation.previousComputations.values().stream().allMatch(Boolean::booleanValue)) {
-            Thread.ofVirtual().start(() -> {
-                try {
-                    computation.startComputationBy(updater);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e); // TODO
-                }
-            });
-        }
     }
 
     /**
@@ -559,15 +540,14 @@ public abstract class StructuredComputation <
     }
 
     @Override
-    protected void onConnectParent(Self parent, Graph<?, ApplicationEdge> graph) throws RuntimeException {
-        super.onConnectParent(parent, graph);
-        previousComputations.put(parent, false);
+    protected void onDisconnectChild(Self child, Graph<?, ? extends ApplicationEdge> graph) throws RuntimeException {
+        super.onDisconnectChild(child, graph);
     }
 
     @Override
-    protected void onDisconnectChild(Self child, Graph<?, ? extends ApplicationEdge> graph) throws RuntimeException {
-        super.onDisconnectChild(child, graph);
-
+    protected void onConnectParent(Self parent, Graph<?, ApplicationEdge> graph) throws RuntimeException {
+        super.onConnectParent(parent, graph);
+        previousComputations.put(parent, false);
     }
 
     @Override

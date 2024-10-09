@@ -1,6 +1,8 @@
 package juanmanuel.tea.physics;
 
 import juanmanuel.tea.components.GameObject;
+import juanmanuel.tea.physics.dynamics.Position;
+import juanmanuel.tea.physics.dynamics.Velocity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,6 +18,46 @@ class PhysicsUpdaterTest {
         @Override
         public void updatePhysics() {
             updated = true;
+        }
+
+        @Override
+        public Position position() {
+            return null;
+        }
+
+        @Override
+        public void move() {
+
+        }
+
+        @Override
+        public void position(Position position) {
+
+        }
+
+        @Override
+        public void position(double e1, double e2, double e3) {
+
+        }
+
+        @Override
+        public void velocity(Velocity velocity) {
+
+        }
+
+        @Override
+        public void velocity(double e1, double e2, double e3) {
+
+        }
+
+        @Override
+        public Velocity velocity() {
+            return null;
+        }
+
+        @Override
+        public boolean collides(PhysicsUpdated other) {
+            return false;
         }
     }
 

@@ -11,7 +11,8 @@ public enum PolicyState {
     public PolicyState or(PolicyState other) {
         return switch (this) {
             case ACCEPT -> ACCEPT;
-            case REJECT, UNSET -> other;
+            case REJECT -> REJECT;
+            case UNSET -> other;
         };
     }
 

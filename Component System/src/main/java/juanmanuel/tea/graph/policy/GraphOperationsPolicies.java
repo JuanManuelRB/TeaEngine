@@ -13,7 +13,7 @@ public final class GraphOperationsPolicies {
     private Map<Policy.NullaryPolicy, PolicyState> nullaryPolicyStateMap;
     private Map<Policy.UnaryPolicy<?>, WeakHashMap<GraphElement, PolicyState>> unaryObjectPolicyStateMap;
     private Map<Policy.UnaryPolicy<?>, HashMap<Class<? extends GraphElement>, PolicyState>> unaryTypePolicyStateMap;
-    private Map<Policy.BinaryPolicy<?, ?>, HashMap<Pair<WeakReference<GraphElement>, WeakReference<GraphElement>>, PolicyState>> binaryObjectPolicyStateMap;
+    private Map<Policy.BinaryPolicy<?, ?>, HashMap<Pair<GraphElement, GraphElement>, PolicyState>> binaryObjectPolicyStateMap; // TODO Use WeakReference
     private Map<Policy.BinaryPolicy<?, ?>, HashMap<Pair<Class<? extends GraphElement>, Class<? extends GraphElement>>, PolicyState>> binaryTypePolicyStateMap;
 
     public record Pair<F, S>(F first, S second) {}
@@ -146,7 +146,7 @@ public final class GraphOperationsPolicies {
                     ? PolicyState.UNSET
                     : binaryObjectPolicyStateMap
                         .getOrDefault(binaryPolicy, new HashMap<>())
-                        .getOrDefault(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.UNSET);
+                        .getOrDefault(new Pair<>(firstElement, secondElement), PolicyState.UNSET);
 
             case TYPE_OVER_OBJECT -> binaryTypePolicyStateMap == null
                     ? PolicyState.UNSET
@@ -205,7 +205,7 @@ public final class GraphOperationsPolicies {
      * @param <E1> the type of the first graph element
      * @param <E2> the type of the second graph element
      */
-    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement> PolicyState stateOf(P binaryPolicy, Pair<Class<E1>, Class<E2>> graphElementTypePair) {
+    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement> PolicyState stateOf(P binaryPolicy, Pair<Class<? extends E1>, Class<? extends E2>> graphElementTypePair) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(graphElementTypePair);
 
@@ -317,7 +317,7 @@ public final class GraphOperationsPolicies {
      * @param <P> the type of the policy
      * @param <G> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void accept(P binaryPolicy, Class<G> graphElementType) {
+    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void accept(P binaryPolicy, Class<? extends G> graphElementType) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(graphElementType);
 
@@ -334,7 +334,7 @@ public final class GraphOperationsPolicies {
      * @param <P> the type of the policy
      * @param <G> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void reject(P binaryPolicy, Class<G> graphElementType) {
+    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void reject(P binaryPolicy, Class<? extends G> graphElementType) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(graphElementType);
 
@@ -351,7 +351,7 @@ public final class GraphOperationsPolicies {
      * @param <P> the type of the policy
      * @param <G> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void unset(P binaryPolicy, Class<G> graphElementType) {
+    public <P extends GraphPolicy & Policy.UnaryPolicy<G>, G extends GraphElement> void unset(P binaryPolicy, Class<? extends G> graphElementType) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(graphElementType);
 
@@ -380,7 +380,8 @@ public final class GraphOperationsPolicies {
 
         binaryObjectPolicyStateMap
                 .computeIfAbsent(ternaryPolicy, _ -> new HashMap<>())
-                .put(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.ACCEPT);
+                .put(new Pair<>(firstElement, secondElement), PolicyState.ACCEPT);
+//                .put(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.ACCEPT);
     }
 
     /**
@@ -402,7 +403,8 @@ public final class GraphOperationsPolicies {
 
         binaryObjectPolicyStateMap
                 .computeIfAbsent(ternaryPolicy, _ -> new HashMap<>())
-                .put(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.REJECT);
+                .put(new Pair<>(firstElement, secondElement), PolicyState.REJECT);
+//                .put(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.REJECT);
     }
 
     /**
@@ -424,7 +426,8 @@ public final class GraphOperationsPolicies {
 
         binaryObjectPolicyStateMap
                 .computeIfAbsent(ternaryPolicy, _ -> new HashMap<>())
-                .put(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.UNSET);
+                .put(new Pair<>(firstElement, secondElement), PolicyState.UNSET);
+//                .put(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.UNSET);
     }
 
     /**
@@ -436,7 +439,7 @@ public final class GraphOperationsPolicies {
      * @param <G1> the type of the first graph element
      * @param <G2> the type of the second graph element
      */
-    public <P extends GraphPolicy & Policy.BinaryPolicy<G1, G2>, G1 extends GraphElement, G2 extends GraphElement> void accept(P ternaryPolicy, Class<G1> firstElementType, Class<G2> secondElementType) {
+    public <P extends GraphPolicy & Policy.BinaryPolicy<G1, G2>, G1 extends GraphElement, G2 extends GraphElement> void accept(P ternaryPolicy, Class<? extends G1> firstElementType, Class<? extends G2> secondElementType) {
         Objects.requireNonNull(ternaryPolicy);
         Objects.requireNonNull(firstElementType);
         Objects.requireNonNull(secondElementType);

@@ -17,6 +17,8 @@ import java.util.concurrent.StructuredTaskScope;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static juanmanuel.tea.graph.policy.VertexPolicy.EffectVertexPolicy.*;
+
 /// Represents a computation that can be executed by an Updater.
 ///
 /// This class is a vertex that an associated Updater can handle. The updater is responsible for providing a graph that
@@ -47,6 +49,11 @@ public abstract class StructuredComputation <
         this.updaterClass = updaterClass;
         this.updated = updated;
         this.semaphore = new Semaphore(concurrentComputations);
+
+        policiesManager().accept(ON_CONNECT_CHILD_POLICY, (Class<Self>) this.getClass());
+        policiesManager().accept(ON_CONNECT_PARENT_POLICY, (Class<Self>) this.getClass());
+        policiesManager().accept(ON_DISCONNECT_CHILD_POLICY, (Class<Self>) this.getClass());
+        policiesManager().accept(ON_DISCONNECT_PARENT_POLICY, (Class<Self>) this.getClass());
 
 //        validationsManager() // TODO
 //                .addOperationValidation(
@@ -536,27 +543,35 @@ public abstract class StructuredComputation <
     @Override
     protected void onConnectChild(Self child, Graph<?, ApplicationEdge> graph) throws RuntimeException {
         super.onConnectChild(child, graph);
-
+        System.out.println("Connected child: " + child); // FIXME: Delete, just for testing
     }
 
     @Override
     protected void onDisconnectChild(Self child, Graph<?, ? extends ApplicationEdge> graph) throws RuntimeException {
         super.onDisconnectChild(child, graph);
+        System.out.println("Disconnected child: " + child); // FIXME: Delete, just for testing
     }
 
     @Override
     protected void onConnectParent(Self parent, Graph<?, ApplicationEdge> graph) throws RuntimeException {
         super.onConnectParent(parent, graph);
+        System.out.println("Connected parent: " + parent); // FIXME: Delete, just for testing
         previousComputations.put(parent, false);
     }
 
     @Override
     protected void onDisconnectParent(Self parent, Graph<?, ? extends ApplicationEdge> graph) throws RuntimeException {
         super.onDisconnectParent(parent, graph);
+        System.out.println("Disconnected parent: " + parent); // FIXME: Delete, just for testing
         previousComputations.remove(parent);
     }
 
-
+    @Override
+    public String toString() {
+        return "StructuredComputation{" +
+                "updated=" + updated +
+                ", updaterClass=" + updaterClass;
+    }
 
     @Override
     public boolean equals(Object obj) {

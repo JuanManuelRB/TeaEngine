@@ -20,6 +20,8 @@ import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static juanmanuel.tea.graph.policy.GraphPolicy.EdgeModificationGraphPolicy.CREATE_EDGE_POLICY;
+
 @NullMarked
 public class PhysicsUpdater
         implements Updater<PhysicsUpdater, PhysicsUpdated, PhysicsUpdater.StructuredPhysicComputation>,
@@ -37,6 +39,11 @@ public class PhysicsUpdater
         super();
         this.name = name;
         computationGraph = new Graph<>(ApplicationEdge.class);
+        computationGraph.policiesManager().accept(
+                CREATE_EDGE_POLICY,
+                StructuredPhysicComputation.class,
+                StructuredPhysicComputation.class
+        );
     }
 
 
@@ -65,11 +72,12 @@ public class PhysicsUpdater
         physicsUpdated.updatePhysics();
     }
 
+    /// Creates a new computation for the updated object.
+    /// @param updated The updated object
     @Override
     public StructuredPhysicComputation createComputation(PhysicsUpdated updated) {
         var c = new StructuredPhysicComputation(updated);
         graph().policiesManager().accept(GraphPolicy.VertexModificationGraphPolicy.ADD_VERTEX_POLICY, c);
-        graph().policiesManager().accept(GraphPolicy.EdgeModificationGraphPolicy.CREATE_EDGE_POLICY, StructuredPhysicComputation.class, StructuredPhysicComputation.class);
         c.policiesManager().accept(VertexPolicy.GraphModificationVertexPolicy.ADD_TO_GRAPH_POLICY, graph());
         c.policiesManager().accept(VertexPolicy.EdgeModificationVertexPolicy.CONNECT_CHILD_POLICY, StructuredPhysicComputation.class);
         c.policiesManager().accept(VertexPolicy.EdgeModificationVertexPolicy.CONNECT_PARENT_POLICY, StructuredPhysicComputation.class);
@@ -89,77 +97,10 @@ public class PhysicsUpdater
         return computationGraph;
     }
 
-    private void compute(StructuredPhysicComputation computation) throws InterruptedException {
-        Objects.requireNonNull(computation);
-        if (!graph().containsVertex(computation))
-            throw new IllegalArgumentException("The computation is not part of this updater's graph.");
-
-        onStartCompute(computation);
-        update(computation);
-        onFinishCompute(computation);
-    }
-
-    private void computeIfReady(StructuredPhysicComputation computation) throws InterruptedException {
-        if (computation.previousComputations().values().stream().allMatch(b -> b)) compute(computation);
-    }
-
-    protected void onStartCompute(StructuredPhysicComputation computation) throws InterruptedException {
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            // Reset the previous computations
-            for (var previousComputation : computation.previousComputations().entrySet())
-                scope.fork(() -> {
-                    previousComputation.setValue(false);
-                    return null;
-                });
-
-            // Notify the children that the computation has started
-            for (var child : graph().childrenOf(computation))
-                scope.fork(() -> {
-                    child.previousComputations().computeIfPresent(computation, (_, _) -> false);
-                    child.onParentComputeStarts(computation, this);
-                    return null;
-                });
-
-            // Notify the parents that the computation has started
-            for (var parent : graph().parentsOf(computation))
-                scope.fork(() -> {
-                    parent.onChildComputeStarts(computation, this);
-                    return null;
-                });
-            scope.join();
-        }
-    }
-
-    protected void onFinishCompute(StructuredPhysicComputation computation) throws InterruptedException {
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            // Notify the children that the computation has finished
-            for (var child : graph().childrenOf(computation))
-                scope.fork(() -> {
-                    child.previousComputations().computeIfPresent(computation, (_, _) -> true);
-                    child.onParentComputeFinished(computation, this);
-                    Thread.ofVirtual().start(() -> {
-                        try {
-                            computeIfReady(child);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    return null;
-                });
-
-            // Notify the parents that the computation has finished
-            for (var parent : graph().parentsOf(computation))
-                scope.fork(() -> {
-                    parent.onChildComputeFinished(computation, this);
-                    return null;
-                });
-            scope.join();
-        }
-    }
-
     /**
      * Starts the cycle of computation.
      */
+    @Override
     public void start() {
         if (running)
             return;
@@ -169,9 +110,6 @@ public class PhysicsUpdater
         try (ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1)) {
             executor.scheduleAtFixedRate(() -> {
                 try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-//                    var elapsed = System.nanoTime() - start.get();
-//                    System.out.println("Start: " + elapsed);
-//                    start.set(System.nanoTime());
                     for (PhysicsUpdater.StructuredPhysicComputation source : graph().roots()) {
                         scope.fork(() -> {
                             compute(source);
@@ -179,9 +117,6 @@ public class PhysicsUpdater
                         });
                     }
                     scope.join();
-//                    elapsed = System.nanoTime() - start.get();
-//                    System.out.println("End: " + elapsed);
-//                    start.set(System.nanoTime());
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -190,6 +125,7 @@ public class PhysicsUpdater
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        running = false;
     }
 
     /**
@@ -269,6 +205,11 @@ public class PhysicsUpdater
         @Override
         protected VertexCallbackManager<StructuredPhysicComputation> callbacksManager() {
             return super.callbacksManager();
+        }
+
+        @Override
+        public String toString() {
+            return STR."StructuredPhysicComputation{\{updated()}}";
         }
     }
 }

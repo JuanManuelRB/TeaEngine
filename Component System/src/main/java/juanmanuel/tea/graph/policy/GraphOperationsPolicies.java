@@ -2,11 +2,7 @@ package juanmanuel.tea.graph.policy;
 
 import juanmanuel.tea.graph.GraphElement;
 
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.*;
 
 public final class GraphOperationsPolicies {
     private final PolicyCheckAlgorithm defaultPolicyCheckAlgorithm;
@@ -28,28 +24,29 @@ public final class GraphOperationsPolicies {
 
     /**
      * Returns the state of the given policy.
-     * @param unaryVertexPolicy the policy to check
+     * @param nullaryVertexPolicy the policy to check
      * @return the state of the policy
      * @param <P> the type of the policy
      */
-    public <P extends GraphPolicy & Policy.NullaryPolicy> PolicyState stateOf(P unaryVertexPolicy) {
+    public <P extends GraphPolicy & Policy.NullaryPolicy> PolicyState stateOf(P nullaryVertexPolicy) {
         if (nullaryPolicyStateMap != null)
-            return nullaryPolicyStateMap.getOrDefault(unaryVertexPolicy, PolicyState.UNSET);
+            return nullaryPolicyStateMap.getOrDefault(nullaryVertexPolicy, PolicyState.UNSET);
 
         return PolicyState.UNSET;
     }
 
     /**
      * Returns the state of the given policy for the given graph element using the given algorithm.
-     * @param binaryPolicy the policy to check
+     * @param unaryPolicy the policy to check
      * @param graphElement the graph element to check
      * @param algorithm the algorithm to use
      * @return the state of the policy
      * @param <P> the type of the policy
      * @param <E> the type of the graph element
      */
-    public <P extends GraphPolicy & Policy.UnaryPolicy<E>, E extends GraphElement> PolicyState stateOf(P binaryPolicy, E graphElement, PolicyCheckAlgorithm algorithm) {
-        Objects.requireNonNull(binaryPolicy);
+    public <P extends GraphPolicy & Policy.UnaryPolicy<E>, E extends GraphElement>
+    PolicyState stateOf(P unaryPolicy, E graphElement, PolicyCheckAlgorithm algorithm) {
+        Objects.requireNonNull(unaryPolicy);
         Objects.requireNonNull(graphElement);
         Objects.requireNonNull(algorithm);
 
@@ -57,37 +54,105 @@ public final class GraphOperationsPolicies {
             case OBJECT_OVER_TYPE -> unaryObjectPolicyStateMap == null
                     ? PolicyState.UNSET
                     : unaryObjectPolicyStateMap
-                        .getOrDefault(binaryPolicy, new WeakHashMap<>())
+                        .getOrDefault(unaryPolicy, new WeakHashMap<>())
                         .getOrDefault(graphElement, PolicyState.UNSET);
 
             case TYPE_OVER_OBJECT -> unaryTypePolicyStateMap == null
                     ? PolicyState.UNSET
                     : unaryTypePolicyStateMap
-                        .getOrDefault(binaryPolicy, new HashMap<>())
+                        .getOrDefault(unaryPolicy, new HashMap<>())
                         .getOrDefault(graphElement.getClass(), PolicyState.UNSET);
 
-            case OBJECT_AND_TYPE -> unaryObjectPolicyStateMap == null
-                    ? PolicyState.UNSET
-                    : unaryObjectPolicyStateMap
-                        .getOrDefault(binaryPolicy, new WeakHashMap<>())
-                        .getOrDefault(graphElement, PolicyState.UNSET)
-                        .and(unaryTypePolicyStateMap == null
-                                ? PolicyState.UNSET
-                                : unaryTypePolicyStateMap
-                                    .getOrDefault(binaryPolicy, new HashMap<>())
-                                    .getOrDefault(graphElement.getClass(), PolicyState.UNSET));
+            case OBJECT_AND_TYPE -> {
+                PolicyState objectState = unaryObjectPolicyStateMap == null
+                        ? PolicyState.UNSET
+                        : unaryObjectPolicyStateMap
+                        .getOrDefault(unaryPolicy, new WeakHashMap<>())
+                        .getOrDefault(graphElement, PolicyState.UNSET);
 
-            case OBJECT_OR_TYPE -> unaryObjectPolicyStateMap == null
-                    ? PolicyState.UNSET
-                    : unaryObjectPolicyStateMap
-                        .getOrDefault(binaryPolicy, new WeakHashMap<>())
-                        .getOrDefault(graphElement, PolicyState.UNSET)
-                        .or(unaryTypePolicyStateMap == null
-                                ? PolicyState.UNSET
-                                : unaryTypePolicyStateMap
-                                    .getOrDefault(binaryPolicy, new HashMap<>())
-                                    .getOrDefault(graphElement.getClass(), PolicyState.UNSET));
+                PolicyState typeState = unaryTypePolicyStateMap == null
+                        ? PolicyState.UNSET
+                        : findMostSpecificTypePolicy(
+                                unaryTypePolicyStateMap.getOrDefault(unaryPolicy, new HashMap<>()),
+                                graphElement.getClass()
+                        );
+
+                yield objectState.and(typeState);
+            }
+
+            case OBJECT_OR_TYPE -> {
+                PolicyState objectState = unaryObjectPolicyStateMap == null
+                        ? PolicyState.UNSET
+                        : unaryObjectPolicyStateMap
+                            .getOrDefault(unaryPolicy, new WeakHashMap<>())
+                            .getOrDefault(graphElement, PolicyState.UNSET);
+
+                PolicyState typeState = unaryTypePolicyStateMap == null
+                        ? PolicyState.UNSET
+                        : findMostSpecificTypePolicy(
+                                unaryTypePolicyStateMap.getOrDefault(unaryPolicy, new HashMap<>()),
+                                graphElement.getClass()
+                        );
+
+                yield objectState.or(typeState);
+
+//                yield unaryObjectPolicyStateMap == null
+//                        ? PolicyState.UNSET.or(unaryTypePolicyStateMap == null
+//                        ? PolicyState.UNSET
+//                        : unaryTypePolicyStateMap
+//                        .getOrDefault(unaryPolicy, new HashMap<>())
+//                        .getOrDefault(graphElement.getClass(), PolicyState.UNSET))
+//                        : unaryObjectPolicyStateMap
+//                        .getOrDefault(unaryPolicy, new WeakHashMap<>())
+//                        .getOrDefault(graphElement, PolicyState.UNSET)
+//                        .or(unaryTypePolicyStateMap == null
+//                                ? PolicyState.UNSET
+//                                : unaryTypePolicyStateMap
+//                                .getOrDefault(unaryPolicy, new HashMap<>())
+//                                .getOrDefault(graphElement.getClass(), PolicyState.UNSET));
+            }
         };
+    }
+
+    // Helper method to find the most specific matching type policy
+    private PolicyState findMostSpecificTypePolicy(Map<Class<? extends GraphElement>, PolicyState> typePolicies, Class<?> targetClass) {
+        return typePolicies.entrySet().stream()
+                .filter(entry -> entry.getKey().isAssignableFrom(targetClass))
+                .min((e1, e2) -> compareClassSpecificity(e1.getKey(), e2.getKey(), targetClass))
+                .map(Map.Entry::getValue)
+                .orElse(PolicyState.UNSET);
+    }
+
+    // Helper method to compare class specificity
+    private int compareClassSpecificity(Class<?> class1, Class<?> class2, Class<?> targetClass) {
+        if (class1 == class2) return 0;
+        if (class1.isAssignableFrom(class2)) return 1;  // class2 is more specific
+        if (class2.isAssignableFrom(class1)) return -1; // class1 is more specific
+
+        // If neither is assignable from the other, compare their distance to the target class
+        return Integer.compare(
+                getInheritanceDistance(class1, targetClass),
+                getInheritanceDistance(class2, targetClass)
+        );
+    }
+
+    // Helper method to calculate inheritance distance
+    private int getInheritanceDistance(Class<?> superClass, Class<?> targetClass) {
+        int distance = 0;
+        Class<?> currentClass = targetClass;
+
+        while (currentClass != null && !currentClass.equals(superClass)) {
+            distance++;
+            if (superClass.isInterface()) {
+                // Check interfaces
+                if (Arrays.asList(currentClass.getInterfaces()).contains(superClass)) {
+                    return distance;
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+
+        return currentClass == null ? Integer.MAX_VALUE : distance;
     }
 
     /**
@@ -136,7 +201,8 @@ public final class GraphOperationsPolicies {
      * @param <E1> the type of the first graph element
      * @param <E2> the type of the second graph element
      */
-    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement> PolicyState stateOf(P binaryPolicy, E1 firstElement, E2 secondElement, PolicyCheckAlgorithm algorithm) {
+    public <P extends GraphPolicy & Policy.BinaryPolicy<E1, E2>, E1 extends GraphElement, E2 extends GraphElement>
+    PolicyState stateOf(P binaryPolicy, E1 firstElement, E2 secondElement, PolicyCheckAlgorithm algorithm) {
         Objects.requireNonNull(binaryPolicy);
         Objects.requireNonNull(firstElement);
         Objects.requireNonNull(secondElement);
@@ -152,29 +218,41 @@ public final class GraphOperationsPolicies {
                     ? PolicyState.UNSET
                     : binaryTypePolicyStateMap
                         .getOrDefault(binaryPolicy, new HashMap<>())
-                        .getOrDefault(new Pair<>(firstElement.getClass(), secondElement.getClass()), PolicyState.UNSET);
+                        .entrySet().stream()
+                        .filter(entry -> entry.getKey().first().isAssignableFrom(firstElement.getClass())
+                                && entry.getKey().second().isAssignableFrom(secondElement.getClass()))
+                        .map(Map.Entry::getValue)
+                        .findAny().orElse(PolicyState.UNSET);
 
             case OBJECT_AND_TYPE -> binaryObjectPolicyStateMap == null
                     ? PolicyState.UNSET
                     : binaryObjectPolicyStateMap
                         .getOrDefault(binaryPolicy, new HashMap<>())
-                        .getOrDefault(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.UNSET)
+                        .getOrDefault(new Pair<>(firstElement, secondElement), PolicyState.UNSET)
                         .and(binaryTypePolicyStateMap == null
                                 ? PolicyState.UNSET
-                                : binaryTypePolicyStateMap
+                                : binaryTypePolicyStateMap // FIXME: Type checks
                                     .getOrDefault(binaryPolicy, new HashMap<>())
-                                    .getOrDefault(new Pair<>(firstElement.getClass(), secondElement.getClass()), PolicyState.UNSET));
+                                    .entrySet().stream()
+                                    .filter(entry -> entry.getKey().first().isAssignableFrom(firstElement.getClass())
+                                            && entry.getKey().second().isAssignableFrom(secondElement.getClass()))
+                                    .map(Map.Entry::getValue)
+                                    .findAny().orElse(PolicyState.UNSET));
 
             case OBJECT_OR_TYPE -> binaryObjectPolicyStateMap == null
                     ? PolicyState.UNSET
                     : binaryObjectPolicyStateMap
                         .getOrDefault(binaryPolicy, new HashMap<>())
-                        .getOrDefault(new Pair<>(new WeakReference<>(firstElement), new WeakReference<>(secondElement)), PolicyState.UNSET)
+                        .getOrDefault(new Pair<>(firstElement, secondElement), PolicyState.UNSET)
                         .or(binaryTypePolicyStateMap == null
                                 ? PolicyState.UNSET
                                 : binaryTypePolicyStateMap
                                     .getOrDefault(binaryPolicy, new HashMap<>())
-                                    .getOrDefault(new Pair<>(firstElement.getClass(), secondElement.getClass()), PolicyState.UNSET));
+                                    .entrySet().stream()
+                                    .filter(entry -> entry.getKey().first().isAssignableFrom(firstElement.getClass())
+                                            && entry.getKey().second().isAssignableFrom(secondElement.getClass()))
+                                    .map(Map.Entry::getValue)
+                                    .findAny().orElse(PolicyState.UNSET));
         };
     }
 
